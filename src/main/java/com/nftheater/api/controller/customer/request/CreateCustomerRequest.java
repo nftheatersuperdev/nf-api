@@ -1,0 +1,20 @@
+package com.nftheater.api.controller.customer.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class CreateCustomerRequest {
+
+    @NotBlank
+    private String customerName;
+    private String email;
+    private String phoneNumber;
+    @NotBlank
+    private String lineId;
+    @NotBlank
+    private String lineUrl;
+    private UUID createdBy;
+}
