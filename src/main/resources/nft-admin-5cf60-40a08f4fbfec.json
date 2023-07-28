@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "nft-admin-5cf60",
+  "private_key_id": "40a08f4fbfec9adb5a12a2ffa76e98aa54842558",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDno9V705KK4h5P\nE/z89JGJeOMnlke2OjOxg89hBjRrucoOVPkoMWYRY/dh12dDXKBarfT0WBD2imrZ\ngJo4toFkd0Bex78HNN5secBMJBNGMkJ6T6aaeZdtR8hXa9/L2tmSmyl8+u6Zx7Iq\nrYd3splSfczL4r5n9tvK8nESIdMMGeySJPec6QCIw09ONYEddNA2PSlPGIOVRdK0\n46q3wnB2iuJaSZkpqWxbCt8TpgGgtZxLLxkTv7wT2d7seUaxAgPlA8m3RC6yk8SF\nkm01UBTrZs6oO9SPg5lI2L1xyjrh4vusIp6ZQnVYb0AuGimbj1SG4HZiOTGx3lCE\nFSq+T9BXAgMBAAECggEAYHVCUFqFguzvFxnpNwK22gqreNAlE5Z/8TNEt4/oY1WN\n9NLgoCKV8LbyjF0w5IWdRrV6tAc6JRf1r5XUYrpo/keEWBOQkjUrS/uVHn/FQO1r\n7lfdtiTc8EY8gF7s5gw/nsObDq7Fjebw48G4EBmgrA+zqNFGXa+XzhaQDC9mnXoh\nR/frjhMfRgJa+0NoaEhwncSiS2Zpq75/wNjhk0NdnmaD1y2HL6HPyn0zs4WN7BBb\nhDJ4kNtDPaD7hpjvNKl+5bTreNzB+EqjdfKCD/OYQzFfmQzqZUIYHPh5BlSNovr/\nnZ82Yza8rOwyEa320pkEkFwAkk3Pq/4ercTWqyAA6QKBgQD381dD8whg1VaL/khu\nBPOTcXOzmYwIyRaQKoQU4cZd6nOaABJdQHsSu2Fg0keq8aqb956hQ0XunRigpEaO\nVvmxiDJwHcWGEMt3L4wCbJDijSMngAeFyzAktEI35AXe7XiPgFX2nDn6n9rW2NQn\nrpGE2t7XSLbYPDMDaWZXzeYXTwKBgQDvKPCOFv68oRgTTJBuPqljGH8lfujmoo1X\nmyKaYSCAwI4c+/rd41ir0pk67wc+0YrCTAgoH5ybtKx990Il9mnwnYRlG1yXEjPh\nb3cl2Mum8T4AzZLwcGmP1vbGjbD15N290XwuKyWRy7GeLfuSo5N3kPKPyHPyInrK\n8NJwFlF0eQKBgQCvEVi/OFzlChymka8QR1y38TXxTGvsVBcjSXGi0NrfusdOp9hP\nkVSUoEscMry5fRKqNwcA89/vn2ohGnxayhxY9kIumUa65ybSC3c+yurtmxuEK0ik\ndheTAtdyYQSoJ2GlaMbJbfsd8zpv0f7R2dcTR/ppZQT83lxif0vsmQtpzwKBgCnJ\nknaRSAM3dphwqU/J/RjGf/jSOumJf37OKXal/+LfQjWIRaYdgjHLg2CLwU1VmZQn\naslv9JI0OGtuF43Ah3Q2YZq09DGlSZFbQ4tGXRcXUckcIk+GpLswSUAaI9BjI+d1\nwefjPBZEbA2CZVGS6UJb/jXnRXMKWUA6YdqZ27OpAoGBAIqKbwfiIHJXtL4QpclY\nAdc4fpLUmGg4jSbj9hjh99f1/CjsWWp/q9ckhBt5K/Cao1Q3BO2d2L4xvP8H4XEp\nRPIIUUnysKciUWX8dequNnAr+kMvZ36/124+j5nLKAqIjB5Bq7m6HWm00sYp4qFl\n4k9LGYStYfRj5gyltH0mqqJJ\n-----END PRIVATE KEY-----\n",
+  "client_email": "nf-api-service@nft-admin-5cf60.iam.gserviceaccount.com",
+  "client_id": "112428156440174416085",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/nf-api-service%40nft-admin-5cf60.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
