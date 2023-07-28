@@ -161,7 +161,7 @@
 				<artifactId>appengine-maven-plugin</artifactId>
 				<version>2.2.0</version>
 				<configuration>
-					<version>0.0.1</version>
+					<version>1</version>
 					<projectId>nf-api</projectId>
 				</configuration>
 			</plugin>
