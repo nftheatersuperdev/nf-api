@@ -1,4 +1,2 @@
-runtime: java
-env: flex
-runtime_config:
-  jdk: openjdk9
+runtime: java17
+instance_class: F2
