@@ -1,0 +1,5 @@
+database=postgresql
+spring.cloud.gcp.sql.database-name=nftheater
+spring.cloud.gcp.sql.instance-connection-name=nf-web-admin:asia-southeast1:nftheaterdb
+# Initialize the database since the newly created Cloud SQL database has no tables. The following flag is for Spring Boot 2.5+.
+spring.sql.init.mode=always
