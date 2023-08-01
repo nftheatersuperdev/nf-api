@@ -8,5 +8,6 @@ public class NetflixAdditionalAccountResponse {
     private String email;
     private String password;
     private CustomerResponse user;
+    private String accountStatus;
 
 }

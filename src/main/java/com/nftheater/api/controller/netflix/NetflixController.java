@@ -5,10 +5,7 @@ import com.nftheater.api.controller.netflix.request.CreateNetflixAccountRequest;
 import com.nftheater.api.controller.netflix.request.CreateNetflixAdditionalAccountRequest;
 import com.nftheater.api.controller.netflix.request.SearchNetflixAccountRequest;
 import com.nftheater.api.controller.netflix.request.UpdateLinkUserNetflixRequest;
-import com.nftheater.api.controller.netflix.response.CreateNetflixAccountResponse;
-import com.nftheater.api.controller.netflix.response.CreateNetflixAdditionalAccountResponse;
-import com.nftheater.api.controller.netflix.response.NetflixAccountResponse;
-import com.nftheater.api.controller.netflix.response.SearchNetflixAccountResponse;
+import com.nftheater.api.controller.netflix.response.*;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.GeneralResponse;
 import com.nftheater.api.exception.DataNotFoundException;
@@ -21,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.nftheater.api.constant.ResponseStatus.SUCCESS;
@@ -102,6 +100,25 @@ public class NetflixController {
         netflixService.removeUserFromNetflixAccount(accountId, userId);
         log.info("End remove user {} from netflix : {}", userId, accountId);
         return new GeneralResponse<>(SUCCESS, null);
+    }
+
+    @DeleteMapping("/v1/netflix/{accountId}/additional/{additionalId}/user/{userId}")
+    public GeneralResponse<Void> removeUserFromAdditionalNetflixAccount(
+            @PathVariable("accountId") UUID accountId,
+            @PathVariable("addionalId") UUID additionalId,
+            @PathVariable("userId") String userId) throws DataNotFoundException {
+        log.info("Start remove user {} from netflix : {} additional : {}", userId, accountId, additionalId);
+        netflixService.removeUserFromAdditionalNetflixAccount(accountId, additionalId, userId);
+        log.info("End remove user {} from netflix : {} additional : {}", userId, accountId, additionalId);
+        return new GeneralResponse<>(SUCCESS, null);
+    }
+
+    @GetMapping("/v1/netflix/additional/available")
+    public GeneralResponse<List<GetAvailableAdditionAccountResponse>> getAvailableAdditionalAccount() {
+        log.info("Start get all available additional account.");
+        List<GetAvailableAdditionAccountResponse> response = netflixService.getAvailableAdditionAccount();
+        log.info("End get all available additional account.");
+        return new GeneralResponse<>(SUCCESS, response);
     }
 
 }

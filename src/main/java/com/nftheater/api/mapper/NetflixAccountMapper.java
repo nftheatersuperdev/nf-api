@@ -4,6 +4,7 @@ import com.nftheater.api.constant.NetflixAccountType;
 import com.nftheater.api.controller.netflix.request.CreateNetflixAccountRequest;
 import com.nftheater.api.controller.netflix.response.NetflixAccountResponse;
 import com.nftheater.api.controller.netflix.response.NetflixLinkUserResponse;
+import com.nftheater.api.dto.CustomerDto;
 import com.nftheater.api.dto.NetflixAccountDto;
 import com.nftheater.api.dto.NetflixAdditionalAccountDto;
 import com.nftheater.api.dto.NetflixLinkUserDto;
@@ -56,6 +57,9 @@ public interface NetflixAccountMapper extends EntityMapper<NetflixAccountDto, Ne
     NetflixAdditionalAccountDto toNetflixAdditionalAccountDto(NetflixLinkAdditionalEntity entity);
 
     List<NetflixAdditionalAccountDto> toNetflixAdditionalAccountDtos(List<NetflixLinkAdditionalEntity> entities);
+
+    @Mapping(source = "user", target = "user")
+    NetflixLinkUserDto toNetflixLinkUserDto(NetflixAdditionalAccountDto dto);
 
     @Named("calculateDayLeft")
     public static long calculateDayLeft(ZonedDateTime expireDate) {

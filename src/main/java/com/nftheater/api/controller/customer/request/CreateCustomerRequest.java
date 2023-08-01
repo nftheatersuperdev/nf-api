@@ -8,7 +8,6 @@ import java.util.UUID;
 @Data
 public class CreateCustomerRequest {
 
-    @NotBlank
     private String customerName;
     private String email;
     private String phoneNumber;

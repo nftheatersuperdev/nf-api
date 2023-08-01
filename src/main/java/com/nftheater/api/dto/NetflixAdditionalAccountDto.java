@@ -14,4 +14,5 @@ public class NetflixAdditionalAccountDto {
     private ZonedDateTime updatedDate;
     private String updatedBy;
     private CustomerDto user;
+    private String accountStatus;
 }
