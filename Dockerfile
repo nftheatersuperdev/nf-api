@@ -1,25 +1,20 @@
 # Use official base image of Java Runtime
-        FROM openjdk:17-jdk-alpine
+FROM openjdk:17
 
-        # Set volume point to /tmp
-        VOLUME /tmp
+# Set volume point to /tmp
+VOLUME /tmp
 
-        # File Author / Maintainer
-        MAINTAINER EVME Plus CO.,LTD.
+# File Author / Maintainer
+MAINTAINER Veerapat Prechadech
 
-        # Set application's JAR file
-        ARG JAR_FILE=target/car.jar
+# Set application's JAR file
+ARG JAR_FILE=target/api.jar
 
-        # Set size of memory
-        ARG size_of_memory
+# Add the application's JAR file to the container
+ADD ${JAR_FILE} app.jar
 
-        # Add the application's JAR file to the container
-        ADD ${JAR_FILE} app.jar
+# Expose port
+EXPOSE 5001
 
-        ENV SIZE_OF_MEMORY=$size_of_memory
-
-        # Expose port
-        EXPOSE 8006
-
-        # Run the JAR file
-        ENTRYPOINT java -jar -Dspring.config.location=file:/config/application.properties -Xmx$SIZE_OF_MEMORY /app.jar
+# Run the JAR file
+ENTRYPOINT java -jar -Dspring.config.location=classpath:/application.properties /app.jar

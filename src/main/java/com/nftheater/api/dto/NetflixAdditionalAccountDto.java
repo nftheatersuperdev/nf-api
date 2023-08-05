@@ -7,6 +7,7 @@ import java.util.UUID;
 
 @Data
 public class NetflixAdditionalAccountDto {
+    private UUID additionalId;
     private String email;
     private String password;
     private ZonedDateTime addedDate;

@@ -67,6 +67,14 @@ public class SystemConfigService {
         return systemConfigMapper.toResponse(systemConfigDto);
     }
 
+    public SystemConfigResponse getSystemConfigByConfigName(String configName) throws DataNotFoundException{
+        final SystemConfigEntity systemConfigEntity = systemConfigRepository.findByConfigName(configName)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบ Config : " + configName));
+
+        SystemConfigDto systemConfigDto = systemConfigMapper.toDto(systemConfigEntity);
+        return systemConfigMapper.toResponse(systemConfigDto);
+    }
+
     public CreateSystemConfigResponse createSystemConfig(CreateSystemConfigRequest createSystemConfigRequest)  throws InvalidRequestException, DataNotFoundException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(createSystemConfigRequest.getCreatedBy());
         String createBy = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();

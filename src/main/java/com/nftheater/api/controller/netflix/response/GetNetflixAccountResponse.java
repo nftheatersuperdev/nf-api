@@ -5,6 +5,9 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class UpdateAdditionalAccountResponse {
-    private UUID id;
+public class GetNetflixAccountResponse {
+
+    private UUID accountId;
+    private String accountName;
+
 }
