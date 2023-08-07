@@ -86,6 +86,7 @@ public class CustomerService {
         customerDto.setUserId(generateUserId());
         customerDto.setPassword(generatePassword());
         customerDto.setExpiredDate(ZonedDateTime.now());
+        customerDto.setCustomerStatus("ปกติ");
         CustomerEntity customerEntity = customerMapper.toEntity(customerDto);
         customerRepository.saveAndFlush(customerEntity);
 
@@ -103,7 +104,7 @@ public class CustomerService {
             CustomerListResponse customerListResponse = new CustomerListResponse();
             customerListResponse.setValue(dto.getUserId());
             customerListResponse.setLabel(dto.getCustomerName());
-            customerListResponse.setFilterLabel(dto.getCustomerName()
+            customerListResponse.setFilterLabel(dto.getCustomerName() == null ? "" : dto.getCustomerName()
                     .concat("|")
                     .concat(dto.getEmail() == null ? "" : dto.getEmail())
                     .concat("|")

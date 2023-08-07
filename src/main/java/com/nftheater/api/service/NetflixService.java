@@ -7,14 +7,12 @@ import com.nftheater.api.controller.netflix.response.*;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
-import com.nftheater.api.dto.AdminUserDto;
-import com.nftheater.api.dto.NetflixAccountDto;
-import com.nftheater.api.dto.NetflixAdditionalAccountDto;
-import com.nftheater.api.dto.NetflixLinkUserDto;
+import com.nftheater.api.dto.*;
 import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.exception.InvalidRequestException;
 import com.nftheater.api.mapper.NetflixAccountMapper;
+import com.nftheater.api.mapper.NetflixPackageMapper;
 import com.nftheater.api.repository.*;
 import com.nftheater.api.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.nftheater.api.specification.NetflixSpecification.*;
@@ -42,11 +38,13 @@ import static com.nftheater.api.specification.NetflixSpecification.*;
 public class NetflixService {
 
     private final NetflixAccountMapper netflixAccountMapper;
+    private final NetflixPackageMapper netflixPackageMapper;
     private final NetflixRepository netflixRepository;
     private final NetflixAccountLinkRepository netflixAccountLinkRepository;
     private final NetflixAdditionalAccountRepository netflixAdditionalAccountRepository;
     private final NetflixLinkAdditionalRepository netflixLinkAdditionalRepository;
     private final NetflixAdditionalAccountLinkRepository netflixAdditionalAccountLinkRepository;
+    private final NetflixPackageRepository netflixPackageRepository;
     private final AdminUserService adminUserService;
     private final SystemConfigService systemConfigService;
 
@@ -84,6 +82,15 @@ public class NetflixService {
         SearchNetflixAccountResponse response = new SearchNetflixAccountResponse();
         response.setPagination(pagination);
         List<NetflixAccountResponse> netflixAccountResponse = netflixAccountMapper.mapDtoToResponses(netflixAccountDtoList);
+
+        netflixAccountResponse.stream().forEach(acct -> {
+                for (NetflixAdditionalAccountResponse add : acct.getAdditionalAccounts()) {
+                    if (add.getUser() != null) {
+                        add.getUser().setDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), add.getUser().getExpiredDate()));
+                    }
+                }
+            }
+        );
 
         for (NetflixAccountResponse netflixAccount : netflixAccountResponse) {
             fillEmptyNetflixUser(netflixAccount);
@@ -162,34 +169,57 @@ public class NetflixService {
         return netflixAccountResponse;
     }
 
-    public void linkUserToNetflixAccount(UUID accountId, UpdateLinkUserNetflixRequest request, UUID userId) throws DataNotFoundException, InvalidRequestException {
+    @Transactional
+    public void linkUserToNetflixAccount(UUID accountId, UpdateLinkUserNetflixRequest request, UUID userId, boolean isTransfer) throws DataNotFoundException, InvalidRequestException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(userId);
         String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
         final NetflixAccountEntity netflixAccountEntity = netflixRepository.findById(accountId)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
         final CustomerEntity customerEntity = customerService.getCustomerByUserId(request.getUserId());
 
-        // Validate Existing
-        final NetflixAdditionalAccountLinkEntity existingAdditionalLink = netflixAdditionalAccountLinkRepository
-                .findByUserId(customerEntity.getId())
-                .orElse(null);
+        if(!isTransfer){
+            // Validate Existing
+            final NetflixAdditionalAccountLinkEntity existingAdditionalLink = netflixAdditionalAccountLinkRepository
+                    .findByUserId(customerEntity.getId())
+                    .orElse(null);
 
-        if (existingAdditionalLink != null) {
-            throw new InvalidRequestException("ลูกค้าอยู่ในบัญชีนี้อยู่แล้ว");
-        }
+            if (existingAdditionalLink != null) {
+                throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีอยู่แล้ว");
+            }
 
-        final NetflixAccountLinkEntity existAccountLink = netflixAccountLinkRepository
-                .findByUserId(customerEntity.getId())
-                .orElse(null);
+            final NetflixAccountLinkEntity existAccountLink = netflixAccountLinkRepository
+                    .findByUserId(customerEntity.getId())
+                    .orElse(null);
 
-        if (existAccountLink != null) {
-            throw new InvalidRequestException("ลูกค้าอยู่ในบัญชีนี้อยู่แล้ว");
+            if (existAccountLink != null) {
+                throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีอยู่แล้ว");
+            }
         }
 
         if (NetflixAccountType.ADDITIONAL.name().equalsIgnoreCase(request.getAccountType())) {
 
+            if (netflixAccountEntity.getAdditionalAccounts().size() == 0) {
+                throw new InvalidRequestException("บัญชี Netflix " + netflixAccountEntity.getAccountName() + " ไม่มีจอเสริม กรุณาเพิ่มจอเสริมก่อนทำรายการ");
+            }
+
+            boolean allAdditionalHaveUser = false;
+            UUID seletedAdditionalId = null;
+            for (NetflixLinkAdditionalEntity additionalEntity : netflixAccountEntity.getAdditionalAccounts()) {
+                if (additionalEntity.getAdditional() == null &&
+                        additionalEntity.getAdditional().getNetflixAdditionalAccountLink().getUser() != null) {
+                    allAdditionalHaveUser = true;
+                } else {
+                    allAdditionalHaveUser = false;
+                    seletedAdditionalId = additionalEntity.getAdditional().getId();
+                }
+            }
+
+            if (allAdditionalHaveUser) {
+                throw new InvalidRequestException("จอเสริมของบัญชี Netflix " + netflixAccountEntity.getAccountName() + " เต็มหมดแล้ว กรุณาเลือกบัญชีอื่น");
+            }
+
             final NetflixAdditionalAccountEntity netflixAdditionalAccountEntity = netflixAdditionalAccountRepository
-                    .findById(UUID.fromString(request.getAdditionalId()))
+                    .findById(seletedAdditionalId)
                     .orElseThrow((() -> new DataNotFoundException("ไม่พบบัญชีเสริม")));
 
             // Link User to Additional
@@ -205,6 +235,39 @@ public class NetflixService {
             addedEntity.setAdditionalAccount(netflixAdditionalAccountEntity);
 
             netflixAdditionalAccountLinkRepository.save(addedEntity);
+        } else if (NetflixAccountType.TV.name().equalsIgnoreCase(request.getAccountType())) {
+            if (netflixAccountEntity.getAccountLinks().size() == 0) {
+                NetflixAccountLinkEntity savedAccountLinkEntity = new NetflixAccountLinkEntity();
+                NetflixAccountLinkEntityId id = new NetflixAccountLinkEntityId();
+                id.setAccountId(accountId);
+                id.setUserId(customerEntity.getId());
+                savedAccountLinkEntity.setId(id);
+                savedAccountLinkEntity.setAccountType(request.getAccountType());
+                savedAccountLinkEntity.setAddedBy(adminUser);
+                savedAccountLinkEntity.setAddedDate(ZonedDateTime.now());
+                savedAccountLinkEntity.setUser(customerEntity);
+                savedAccountLinkEntity.setAccount(netflixAccountEntity);
+
+                netflixAccountLinkRepository.save(savedAccountLinkEntity);
+            } else {
+                for (NetflixAccountLinkEntity accountLinkEntity : netflixAccountEntity.getAccountLinks()) {
+                    if (NetflixAccountType.TV.name().equalsIgnoreCase(accountLinkEntity.getAccountType())) {
+                        throw new InvalidRequestException("ทีวีของบัญชี Netflix " + netflixAccountEntity.getAccountName() + " เต็มหมดแล้ว กรุณาเลือกบัญชีอื่น");
+                    }
+                    NetflixAccountLinkEntity savedAccountLinkEntity = new NetflixAccountLinkEntity();
+                    NetflixAccountLinkEntityId id = new NetflixAccountLinkEntityId();
+                    id.setAccountId(accountId);
+                    id.setUserId(customerEntity.getId());
+                    savedAccountLinkEntity.setId(id);
+                    savedAccountLinkEntity.setAccountType(request.getAccountType());
+                    savedAccountLinkEntity.setAddedBy(adminUser);
+                    savedAccountLinkEntity.setAddedDate(ZonedDateTime.now());
+                    savedAccountLinkEntity.setUser(customerEntity);
+                    savedAccountLinkEntity.setAccount(netflixAccountEntity);
+
+                    netflixAccountLinkRepository.save(savedAccountLinkEntity);
+                }
+            }
         } else {
             // Link User to Netflix account
             NetflixAccountLinkEntity accountLinkEntity = new NetflixAccountLinkEntity();
@@ -402,26 +465,50 @@ public class NetflixService {
 
     @Transactional
     public void transferUserToNewAccount(UUID toAccountId, TransferUserRequest transferUserRequest, UUID adminId) throws DataNotFoundException, InvalidRequestException {
-        // Get admin user info
-        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
-
         // Get Netflix account
-        NetflixAccountResponse toNetflixAccount = getNetflixAccount(toAccountId);
+        final NetflixAccountEntity toNetflixAccountEntity = netflixRepository.findById(toAccountId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + toAccountId));
 
-        int existingUser = toNetflixAccount.getUsers().size();
+        int existingAdditionalUser = netflixRepository.getAdditionalUserFromAccount(toAccountId);
+        int existingUser = netflixRepository.getUserFromAccount(toAccountId);
         int maxUser = Integer.valueOf(systemConfigService.getSystemConfigByConfigName("NETFFLIX_MAX_USER").getConfigValue());
-        if (maxUser <= transferUserRequest.getUserIds().size() + existingUser) {
-            throw new InvalidRequestException("ไม่สามารถย้ายลูกค้าได้ เนื่่องจากจำนวนลูกค้าในบัญชี "+ toNetflixAccount.getAccountName() + " เต็ม");
+        if (maxUser < transferUserRequest.getUserIds().size() + existingUser + existingAdditionalUser) {
+            throw new InvalidRequestException("ไม่สามารถย้ายลูกค้าได้ เนื่่องจากจำนวนลูกค้าในบัญชี "+ toNetflixAccountEntity.getAccountName() + " เต็ม");
         }
         // Get Customer ID
         List<CustomerEntity> customerEntities = new ArrayList<>();
         for (String userId : transferUserRequest.getUserIds()) {
             customerEntities.add(customerService.getCustomerByUserId(userId));
         }
-        // Get Customer UUID
-        List<UUID> customerIdList = customerEntities.stream().map(CustomerEntity::getId).collect(Collectors.toList());
+        // Get Customer Entity
+        for(CustomerEntity customerEntity : customerEntities) {
+            // Remove user
+            if (customerEntity.getNetflixAdditionalAccountLinks().size() == 0) {
+                removeUserFromNetflixAccount(transferUserRequest.getFromAccountId(), customerEntity.getUserId());
+            } else {
+                NetflixAdditionalAccountLinkEntity additionalEntity = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId()).get();
+                UUID additionalId = additionalEntity.getAdditionalAccount().getId();
+                removeUserFromAdditionalNetflixAccount(transferUserRequest.getFromAccountId(),additionalId, customerEntity.getUserId());
+            }
+            // Link to new Account
+            UpdateLinkUserNetflixRequest updateLinkUserNetflixRequest = new UpdateLinkUserNetflixRequest();
+            updateLinkUserNetflixRequest.setAccountType(NetflixAccountType.TV.name());
+            updateLinkUserNetflixRequest.setUserId(customerEntity.getUserId());
+            updateLinkUserNetflixRequest.setExtendDay(0);
+            linkUserToNetflixAccount(toAccountId, updateLinkUserNetflixRequest, adminId, true);
+        }
         
+    }
+
+    public List<GetNetflixPackageResponse> getAllNetflixPackage() {
+        List<NetflixPackageDto> allPackageDtos = netflixPackageRepository.findAll()
+                .stream().map(netflixPackageMapper::toDto)
+                .toList();
+        log.info("All Netflix package size : {}", allPackageDtos.size());
+        List<GetNetflixPackageResponse> allPackageResponse = allPackageDtos.stream()
+                .map(netflixPackageMapper::toPackageResponse)
+                .toList();
+        return allPackageResponse;
     }
 
     private void fillEmptyNetflixUser(NetflixAccountResponse netflixAccount) {

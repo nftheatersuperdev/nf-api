@@ -68,7 +68,7 @@ public class NetflixController {
         log.info("Start link user to netflix : {}", accountId);
         String bearerToken = httpServletRequest.getHeader("Authorization");
         UUID userId = adminUserService.getAdminUserByFirebaseToken(bearerToken.substring(7, bearerToken.length())).getId();
-        netflixService.linkUserToNetflixAccount(accountId, updateLinkUserNetflixRequest, userId);
+        netflixService.linkUserToNetflixAccount(accountId, updateLinkUserNetflixRequest, userId, false);
         log.info("End link user to netflix : {}", accountId);
         return new GeneralResponse<>(SUCCESS, null);
     }
@@ -194,6 +194,14 @@ public class NetflixController {
         netflixService.transferUserToNewAccount(toAccountId, transferUserRequest, adminId);
         log.info("End transfer user {} users from account {} to account {}", transferUserRequest.getUserIds().size(), transferUserRequest.getFromAccountId(), toAccountId);
         return new GeneralResponse<>(SUCCESS, null);
+    }
+
+    @GetMapping("/v1/netflix/package")
+    public GeneralResponse<List<GetNetflixPackageResponse>> getAllPackage() {
+        log.info("Start get all netflix package.");
+        List<GetNetflixPackageResponse> responses = netflixService.getAllNetflixPackage();
+        log.info("End get all netflix package size : {}", responses.size());
+        return new GeneralResponse<>(SUCCESS, responses);
     }
 
 }
