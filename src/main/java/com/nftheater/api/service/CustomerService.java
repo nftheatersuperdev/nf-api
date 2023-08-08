@@ -3,12 +3,10 @@ package com.nftheater.api.service;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
 import com.nftheater.api.controller.customer.request.SearchCustomerRequest;
-import com.nftheater.api.controller.customer.response.CreateCustomerResponse;
-import com.nftheater.api.controller.customer.response.CustomerListResponse;
-import com.nftheater.api.controller.customer.response.CustomerResponse;
-import com.nftheater.api.controller.customer.response.SearchCustomerResponse;
+import com.nftheater.api.controller.customer.response.*;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
+import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.dto.CustomerDto;
 import com.nftheater.api.entity.AdminUserEntity;
 import com.nftheater.api.entity.CustomerEntity;
@@ -29,10 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.nftheater.api.specification.CustomerSpecification.*;
@@ -46,6 +41,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final AdminUserService adminUserService;
+    private final SystemConfigService systemConfigService;
 
     public SearchCustomerResponse searchCustomer(SearchCustomerRequest request, PageableRequest pageableRequest) {
         final Pageable pageable = PageRequest.of(
@@ -105,8 +101,8 @@ public class CustomerService {
         for(CustomerDto dto : customerDtoList) {
             CustomerListResponse customerListResponse = new CustomerListResponse();
             customerListResponse.setValue(dto.getUserId());
-            customerListResponse.setLabel(dto.getCustomerName());
-            customerListResponse.setFilterLabel(dto.getCustomerName() == null ? "" : dto.getCustomerName()
+            customerListResponse.setLabel(dto.getLineId());
+            customerListResponse.setFilterLabel(dto.getUserId() == null ? "" : dto.getUserId()
                     .concat("|")
                     .concat(dto.getEmail() == null ? "" : dto.getEmail())
                     .concat("|")
@@ -131,7 +127,7 @@ public class CustomerService {
 
     public CustomerEntity getCustomerByUserId(String userId) throws DataNotFoundException {
         return customerRepository.findByUserId(userId)
-                .orElseThrow(() ->new DataNotFoundException("Customer " + userId + " is not found."));
+                .orElseThrow(() ->new DataNotFoundException("ไม่พบลูกค้า " + userId));
     }
 
     public long extendDayForUser(CustomerEntity customerEntity, int extendDay, String adminUser) {
@@ -142,6 +138,34 @@ public class CustomerService {
         customerRepository.save(customerEntity);
 
         return ChronoUnit.DAYS.between(ZonedDateTime.now(), newExpiredDateTime);
+    }
+
+    public CustomerResponse updateCustomer(String userId, UpdateCustomerRequest updateCustomerRequest, UUID adminId) throws DataNotFoundException {
+        final CustomerEntity customerEntity = customerRepository.findByUserId(userId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลลูกค้า"));
+
+        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
+        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+
+        CustomerEntity savedEntity = customerEntity;
+        savedEntity.setCustomerStatus(updateCustomerRequest.getCustomerStatus());
+        savedEntity.setUpdatedBy(adminUser);
+        savedEntity = customerRepository.save(savedEntity);
+
+        CustomerDto customerDto = customerMapper.toDto(savedEntity);
+
+        return customerMapper.toResponse(customerDto);
+    }
+
+    public String getNextStatusForCustomer(String currentStatus) throws DataNotFoundException {
+        SystemConfigResponse statusFlowValues = systemConfigService.getSystemConfigByConfigName("CUSTOMER_STATUS_FLOW");
+        List<String> statusFlow = Arrays.stream(statusFlowValues.getConfigValue().split(",")).toList();
+        int indexOfCurrentStatus = statusFlow.indexOf(currentStatus);
+        if (indexOfCurrentStatus != -1 && indexOfCurrentStatus+1 != statusFlow.size()) {
+            return statusFlow.get(indexOfCurrentStatus+1);
+        } else {
+            throw new DataNotFoundException("ไม่พบสถานะถัดไป");
+        }
     }
 
     private String generateUserId() {

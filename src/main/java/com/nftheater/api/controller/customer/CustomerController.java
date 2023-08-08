@@ -3,10 +3,7 @@ package com.nftheater.api.controller.customer;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
 import com.nftheater.api.controller.customer.request.SearchCustomerRequest;
-import com.nftheater.api.controller.customer.response.CreateCustomerResponse;
-import com.nftheater.api.controller.customer.response.CustomerListResponse;
-import com.nftheater.api.controller.customer.response.CustomerResponse;
-import com.nftheater.api.controller.customer.response.SearchCustomerResponse;
+import com.nftheater.api.controller.customer.response.*;
 import com.nftheater.api.controller.netflix.response.SearchNetflixAccountResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.GeneralResponse;
@@ -69,6 +66,26 @@ public class CustomerController {
         UUID adminId = UUID.fromString(httpServletRequest.getHeader("userId"));
         CustomerResponse response = customerService.extendExpiredDateForCustomer(userId, extendDayCustomerRequest, adminId);
         log.info("End Extend expired date for {} days of Customer {}", extendDayCustomerRequest.getExtendDay(), userId);
+        return new GeneralResponse<>(SUCCESS, response);
+    }
+
+    @GetMapping("/v1/customer/status/{status}/next")
+    public GeneralResponse<String> getNextCustomerStatus(@PathVariable("status") String status) throws DataNotFoundException {
+        log.info("Start get next status of {}", status);
+        String nextStatus = customerService.getNextStatusForCustomer(status);
+        log.info("End get next status of {} = {}", status, nextStatus);
+        return new GeneralResponse<>(SUCCESS, nextStatus);
+    }
+
+    @PatchMapping("/v1/customer/{customerId}")
+    public GeneralResponse<CustomerResponse> UpdateCustomer(
+            @PathVariable("customerId") String customerId,
+            @RequestBody UpdateCustomerRequest updateCustomerRequest,
+            HttpServletRequest httpServletRequest) throws DataNotFoundException {
+        log.info("Start update customer {}", customerId);
+        UUID adminId = UUID.fromString(httpServletRequest.getHeader("userId"));
+        CustomerResponse response = customerService.updateCustomer(customerId, updateCustomerRequest, adminId);
+        log.info("End update customer {}", customerId);
         return new GeneralResponse<>(SUCCESS, response);
     }
 

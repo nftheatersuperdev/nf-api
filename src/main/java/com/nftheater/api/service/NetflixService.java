@@ -2,6 +2,7 @@ package com.nftheater.api.service;
 
 import com.nftheater.api.constant.NetflixAccountType;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
+import com.nftheater.api.controller.customer.response.UpdateCustomerRequest;
 import com.nftheater.api.controller.netflix.request.*;
 import com.nftheater.api.controller.netflix.response.*;
 import com.nftheater.api.controller.request.PageableRequest;
@@ -30,6 +31,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.nftheater.api.mapper.NetflixAccountMapper.getCustomerStatusFromDayLeft;
 import static com.nftheater.api.specification.NetflixSpecification.*;
 
 @Slf4j
@@ -37,6 +39,7 @@ import static com.nftheater.api.specification.NetflixSpecification.*;
 @RequiredArgsConstructor
 public class NetflixService {
 
+    private UUID defaultSystemUUID = UUID.fromString("590b693a-35c1-4026-98ac-37d3cb3076ab");
     private final NetflixAccountMapper netflixAccountMapper;
     private final NetflixPackageMapper netflixPackageMapper;
     private final NetflixRepository netflixRepository;
@@ -146,7 +149,7 @@ public class NetflixService {
         return createNetflixAdditionalAccountResponse;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public NetflixAccountResponse getNetflixAccount(UUID accountId) throws DataNotFoundException {
         final NetflixAccountDto netflixAccountDto = netflixRepository.findById(accountId)
                 .map(netflixAccountMapper::toDto)
@@ -163,8 +166,20 @@ public class NetflixService {
 
         NetflixAccountResponse netflixAccountResponse = netflixAccountMapper.toResponse(netflixAccountDto);
 
-        // Set color
-        netflixAccountResponse.getUsers().stream().forEach(user -> user.setColor(getColor(user.getAccountStatus())));
+        // Set color and Update customer status
+        netflixAccountResponse.getUsers().stream().forEach(user -> {
+            user.setColor(getColor(user.getAccountStatus()));
+            if(user.getUser().getDayLeft() <= 3 && "กำลังใช้งาน".equalsIgnoreCase(user.getUser().getCustomerStatus())) {
+                String userId = user.getUser().getUserId();
+                String status = getCustomerStatusFromDayLeft(user.getUser().getExpiredDate());
+                UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
+                updateCustomerRequest.setCustomerStatus(status);
+                try {
+                    customerService.updateCustomer(userId, updateCustomerRequest, defaultSystemUUID);
+                } catch (DataNotFoundException e) {}
+                user.getUser().setCustomerStatus(status);
+            }
+        });
         netflixAccountResponse.getUsers().sort(Comparator.comparingInt(NetflixLinkUserResponse::getSort));
         return netflixAccountResponse;
     }
@@ -427,7 +442,7 @@ public class NetflixService {
         savedfNetflixAccountEntity.setChangeDate(request.getChangeDate());
         savedfNetflixAccountEntity.setUpdatedBy(adminUser);
 
-        savedfNetflixAccountEntity = netflixRepository.save(netflixAccountEntity);
+        savedfNetflixAccountEntity = netflixRepository.save(savedfNetflixAccountEntity);
         UpdateNetflixAccountResponse netflixAccountResponse = new UpdateNetflixAccountResponse();
         netflixAccountResponse.setId(savedfNetflixAccountEntity.getId());
         return  netflixAccountResponse;

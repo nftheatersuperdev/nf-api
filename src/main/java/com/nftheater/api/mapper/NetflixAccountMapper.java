@@ -69,13 +69,13 @@ public interface NetflixAccountMapper extends EntityMapper<NetflixAccountDto, Ne
     public static String getCustomerStatusFromDayLeft(ZonedDateTime expireDate) {
         long dayLeft = calculateDayLeft(expireDate);
         if (dayLeft > 3) {
-            return "ไม่ว่าง";
+            return "กำลังใช่้งาน";
         } else if (dayLeft == 3) {
             return "รอ-เรียกเก็บ";
         } else if (dayLeft == 2) {
             return "รอ-ทวงซ้ำ 1";
         } else if (dayLeft == 1) {
-            return "รอ-ทวงซ่้ำ 2";
+            return "รอ-ทวงซ้ำ 2";
         } else {
             return "รอ-หมดอายุ";
         }
