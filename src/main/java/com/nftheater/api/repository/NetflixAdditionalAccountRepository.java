@@ -17,4 +17,5 @@ public interface NetflixAdditionalAccountRepository extends JpaRepository<Netfli
             "where naa.id = naal.additional_account_id)"
             , nativeQuery = true)
     List<NetflixAdditionalAccountEntity> getAvailableAccount();
+
 }

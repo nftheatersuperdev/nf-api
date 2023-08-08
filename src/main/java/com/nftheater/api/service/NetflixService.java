@@ -184,7 +184,7 @@ public class NetflixService {
                     .orElse(null);
 
             if (existingAdditionalLink != null) {
-                throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีอยู่แล้ว");
+                throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีนี้หรือบัญชีอื่นแล้ว");
             }
 
             final NetflixAccountLinkEntity existAccountLink = netflixAccountLinkRepository
@@ -192,21 +192,21 @@ public class NetflixService {
                     .orElse(null);
 
             if (existAccountLink != null) {
-                throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีอยู่แล้ว");
+                throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีนี้หรือบัญชีอื่นแล้ว");
             }
         }
 
         if (NetflixAccountType.ADDITIONAL.name().equalsIgnoreCase(request.getAccountType())) {
-
-            if (netflixAccountEntity.getAdditionalAccounts().size() == 0) {
+            List<NetflixLinkAdditionalEntity> additionalLink = netflixLinkAdditionalRepository.findByAccountId(accountId);
+            if (additionalLink.size() == 0) {
                 throw new InvalidRequestException("บัญชี Netflix " + netflixAccountEntity.getAccountName() + " ไม่มีจอเสริม กรุณาเพิ่มจอเสริมก่อนทำรายการ");
             }
-
             boolean allAdditionalHaveUser = false;
             UUID seletedAdditionalId = null;
-            for (NetflixLinkAdditionalEntity additionalEntity : netflixAccountEntity.getAdditionalAccounts()) {
-                if (additionalEntity.getAdditional() == null &&
-                        additionalEntity.getAdditional().getNetflixAdditionalAccountLink().getUser() != null) {
+            for (NetflixLinkAdditionalEntity additionalEntity : additionalLink) {
+                NetflixAdditionalAccountLinkEntity userInAdditional = netflixAdditionalAccountLinkRepository
+                        .findByAdditionalAccountId(additionalEntity.getId().getAdditionalId()).orElse(null);
+                if(userInAdditional != null) {
                     allAdditionalHaveUser = true;
                 } else {
                     allAdditionalHaveUser = false;
@@ -269,6 +269,14 @@ public class NetflixService {
                 }
             }
         } else {
+            // Check max other
+            int existingUser = netflixAccountEntity.getAccountLinks().stream()
+                    .filter(type -> "OTHER".equalsIgnoreCase(type.getAccountType()))
+                    .collect(Collectors.toList()).size();
+            int maxOther = Integer.valueOf(systemConfigService.getSystemConfigByConfigName("NETFLIX_MAX_OTHER_USER").getConfigValue());
+            if (maxOther <= existingUser) {
+                throw new InvalidRequestException("อุปกรณ์อื่นๆของบัญชี Netflix " + netflixAccountEntity.getAccountName() + " เต็มหมดแล้ว กรุณาเลือกบัญชีอื่น");
+            }
             // Link User to Netflix account
             NetflixAccountLinkEntity accountLinkEntity = new NetflixAccountLinkEntity();
             NetflixAccountLinkEntityId id = new NetflixAccountLinkEntityId();
@@ -285,15 +293,23 @@ public class NetflixService {
         }
 
         // Extend Customer day left.
-        long newDayLeft = customerService.extendDayForUser(customerEntity, request.getExtendDay());
+        long newDayLeft = customerService.extendDayForUser(customerEntity, request.getExtendDay(), adminUser);
 
     }
 
-    public void updateNetflixAccountStatus(UUID accountId, Boolean status, UUID userId) throws DataNotFoundException {
+    public void updateNetflixAccountStatus(UUID accountId, Boolean status, UUID userId) throws DataNotFoundException, InvalidRequestException {
         final NetflixAccountEntity netflixAccountEntity = netflixRepository.findById(accountId)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(userId);
         String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+
+        if(!status) {
+            List<NetflixAccountLinkEntity> accountLink = netflixAccountLinkRepository.findByAccountId(accountId);
+            int additionalLink = netflixLinkAdditionalRepository.getCountUserByAccountId(accountId);
+            if(accountLink.size() != 0 || additionalLink != 0) {
+                throw new InvalidRequestException("ไม่สามารถปิดบัญชีชั่วคราวได้ เนื่องจากยังมีลูกค้าอยู่ในบัญชีนี้");
+            }
+        }
 
         netflixAccountEntity.setIsActive(status);
         netflixAccountEntity.setUpdatedBy(adminUser);
@@ -483,16 +499,19 @@ public class NetflixService {
         // Get Customer Entity
         for(CustomerEntity customerEntity : customerEntities) {
             // Remove user
+            String accountType = "";
             if (customerEntity.getNetflixAdditionalAccountLinks().size() == 0) {
+                accountType = customerEntity.getNetflixAccountLinks().get(0).getAccountType();
                 removeUserFromNetflixAccount(transferUserRequest.getFromAccountId(), customerEntity.getUserId());
             } else {
+                accountType = "ADDITIONAL";
                 NetflixAdditionalAccountLinkEntity additionalEntity = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId()).get();
                 UUID additionalId = additionalEntity.getAdditionalAccount().getId();
                 removeUserFromAdditionalNetflixAccount(transferUserRequest.getFromAccountId(),additionalId, customerEntity.getUserId());
             }
             // Link to new Account
             UpdateLinkUserNetflixRequest updateLinkUserNetflixRequest = new UpdateLinkUserNetflixRequest();
-            updateLinkUserNetflixRequest.setAccountType(NetflixAccountType.TV.name());
+            updateLinkUserNetflixRequest.setAccountType(accountType);
             updateLinkUserNetflixRequest.setUserId(customerEntity.getUserId());
             updateLinkUserNetflixRequest.setExtendDay(0);
             linkUserToNetflixAccount(toAccountId, updateLinkUserNetflixRequest, adminId, true);

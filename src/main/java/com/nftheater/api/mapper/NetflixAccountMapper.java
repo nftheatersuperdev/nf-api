@@ -43,7 +43,6 @@ public interface NetflixAccountMapper extends EntityMapper<NetflixAccountDto, Ne
     List<NetflixLinkUserDto> toNetflixLinkUserDtos(List<NetflixAccountLinkEntity> entities);
 
     @Mapping(source = "user.expiredDate", target = "user.dayLeft", qualifiedByName = "calculateDayLeft")
-    @Mapping(source = "user.expiredDate", target = "user.customerStatus", qualifiedByName = "getCustomerStatus")
     @Mapping(source = "user.expiredDate", target = "accountStatus", qualifiedByName = "getCustomerStatus")
     @Mapping(source = "accountType", target = "sort", qualifiedByName = "getTypeSort")
     NetflixLinkUserResponse toNetflixLinkUserResponse(NetflixLinkUserDto dto);

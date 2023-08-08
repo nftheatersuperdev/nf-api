@@ -10,6 +10,7 @@ import com.nftheater.api.controller.customer.response.SearchCustomerResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.dto.CustomerDto;
+import com.nftheater.api.entity.AdminUserEntity;
 import com.nftheater.api.entity.CustomerEntity;
 import com.nftheater.api.entity.CustomerEntity_;
 import com.nftheater.api.exception.DataNotFoundException;
@@ -31,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.nftheater.api.specification.CustomerSpecification.*;
@@ -114,10 +116,13 @@ public class CustomerService {
         return customerListResponses;
     }
 
-    public CustomerResponse extendExpiredDateForCustomer(String userId, ExtendDayCustomerRequest request) throws DataNotFoundException {
+    public CustomerResponse extendExpiredDateForCustomer(String userId, ExtendDayCustomerRequest request, UUID adminId) throws DataNotFoundException {
         final CustomerEntity customerEntity = customerRepository.findByUserId(userId)
                 .orElseThrow(() -> new DataNotFoundException("Customer ID " + userId + " is not found."));
-        long availableDay = this.extendDayForUser(customerEntity, request.getExtendDay());
+        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
+        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+
+        long availableDay = this.extendDayForUser(customerEntity, request.getExtendDay(), adminUser);
         CustomerDto customerDto = customerMapper.toDto(customerEntity);
         CustomerResponse customerResponse = customerMapper.toResponse(customerDto);
         customerResponse.setDayLeft(availableDay);
@@ -129,10 +134,11 @@ public class CustomerService {
                 .orElseThrow(() ->new DataNotFoundException("Customer " + userId + " is not found."));
     }
 
-    public long extendDayForUser(CustomerEntity customerEntity, int extendDay) {
+    public long extendDayForUser(CustomerEntity customerEntity, int extendDay, String adminUser) {
         ZonedDateTime newExpiredDateTime = customerEntity.getExpiredDate().plusDays(extendDay);
         customerEntity.setExpiredDate(newExpiredDateTime);
-
+        customerEntity.setCustomerStatus("กำลังใช้งาน");
+        customerEntity.setUpdatedBy(adminUser);
         customerRepository.save(customerEntity);
 
         return ChronoUnit.DAYS.between(ZonedDateTime.now(), newExpiredDateTime);

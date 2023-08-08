@@ -63,9 +63,11 @@ public class CustomerController {
 
     @PatchMapping("/v1/customer/{userId}/extend-day")
     public GeneralResponse<CustomerResponse> extendExpiredDateOfCustomer(@PathVariable("userId") String userId,
-            @RequestBody ExtendDayCustomerRequest extendDayCustomerRequest) throws DataNotFoundException {
+            @RequestBody ExtendDayCustomerRequest extendDayCustomerRequest,
+            HttpServletRequest httpServletRequest) throws DataNotFoundException {
         log.info("Start Extend expired date for {} days of Customer {}", extendDayCustomerRequest.getExtendDay(), userId);
-        CustomerResponse response = customerService.extendExpiredDateForCustomer(userId, extendDayCustomerRequest);
+        UUID adminId = UUID.fromString(httpServletRequest.getHeader("userId"));
+        CustomerResponse response = customerService.extendExpiredDateForCustomer(userId, extendDayCustomerRequest, adminId);
         log.info("End Extend expired date for {} days of Customer {}", extendDayCustomerRequest.getExtendDay(), userId);
         return new GeneralResponse<>(SUCCESS, response);
     }

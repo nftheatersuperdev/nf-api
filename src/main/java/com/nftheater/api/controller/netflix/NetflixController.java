@@ -91,7 +91,7 @@ public class NetflixController {
     public GeneralResponse<Void> updateNetflixAccountStatus(
             @PathVariable("accountId") UUID accountId,
             @PathVariable("status") Boolean status,
-            HttpServletRequest httpServletRequest) throws DataNotFoundException {
+            HttpServletRequest httpServletRequest) throws DataNotFoundException, InvalidRequestException {
         log.info("Start update netflix account status id : {} to {}", accountId, status);
         UUID adminId = UUID.fromString(httpServletRequest.getHeader("userId"));
         netflixService.updateNetflixAccountStatus(accountId, status, adminId);

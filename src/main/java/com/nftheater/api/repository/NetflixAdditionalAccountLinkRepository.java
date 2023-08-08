@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface NetflixAdditionalAccountLinkRepository extends JpaRepository<NetflixAdditionalAccountLinkEntity, NetflixAdditionalAccountLinkEntityId> {
 
     Optional<NetflixAdditionalAccountLinkEntity> findByUserId(UUID userId);
+
+    Optional<NetflixAdditionalAccountLinkEntity> findByAdditionalAccountId(UUID additionalAccountId);
 }
