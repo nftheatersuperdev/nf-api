@@ -50,7 +50,6 @@ public class NetflixService {
     private final NetflixPackageRepository netflixPackageRepository;
     private final AdminUserService adminUserService;
     private final SystemConfigService systemConfigService;
-
     private final CustomerService customerService;
 
     @Transactional(readOnly = true)
@@ -69,8 +68,11 @@ public class NetflixService {
             if (!request.getUserId().isBlank() ) {
                 specification = specification.and(userIdContain(request.getUserId()));
             }
-            if (!request.getAccountName().isBlank()){
+            if (!request.getAccountName().isBlank()) {
                 specification = specification.and(accountNameContain(request.getAccountName()));
+            }
+            if (request.getCustomerStatus().size() != 0) {
+                specification = specification.and(customerStatusIn(request.getCustomerStatus()));
             }
             specification = specification.and(isActiveEqual(request.getIsActive()));
         }
@@ -545,7 +547,7 @@ public class NetflixService {
         return allPackageResponse;
     }
 
-    private void fillEmptyNetflixUser(NetflixAccountResponse netflixAccount) {
+    public void fillEmptyNetflixUser(NetflixAccountResponse netflixAccount) {
         // Get all config
         List<SystemConfigResponse> configs = systemConfigService.getAllConfig();
         String maxTvUserString = configs.stream().filter(
@@ -617,7 +619,7 @@ public class NetflixService {
     }
 
     private String getColor(String acctStatus) {
-        if (acctStatus.equalsIgnoreCase("ไม่ว่าง")) {
+        if (acctStatus.equalsIgnoreCase("กำลังใช้งาน")) {
             return "#FF0000";
         } else if (acctStatus.contains("รอ")) {
             return "#FFC100";

@@ -7,6 +7,8 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
+
 import static com.nftheater.api.specification.JoinEntitySpecification.joinList;
 
 public class NetflixSpecification {
@@ -35,4 +37,13 @@ public class NetflixSpecification {
     public static Specification<NetflixAccountEntity> accountNameContain(String accountName) {
         return (netflixAccountEntity, cq, cb) -> cb.like(netflixAccountEntity.get(NetflixAccountEntity_.ACCOUNT_NAME), PERCENT_SIGN + accountName + PERCENT_SIGN);
     }
+
+    public static Specification<NetflixAccountEntity> customerStatusIn(List<String> customerStatus) {
+        return (netflixAccountEntity, cq, cb) -> {
+            Join<NetflixAccountEntity, NetflixAccountLinkEntity> accountJoinAccountLink = netflixAccountEntity.join(NetflixAccountEntity_.ACCOUNT_LINKS, JoinType.INNER);
+            Join<NetflixAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(NetflixAccountLinkEntity_.USER, JoinType.INNER);
+            return cb.in(accountLinkJoinCustomer.get(CustomerEntity_.CUSTOMER_STATUS)).value(customerStatus);
+        };
+    }
 }
+
