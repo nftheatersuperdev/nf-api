@@ -14,11 +14,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -47,7 +52,9 @@ public class TokenFilter extends OncePerRequestFilter {
 
             if (adminUserDto != null) {
                 setHeader(requestWrapper, adminUserDto);
-                Authentication authentication = new UsernamePasswordAuthenticationToken(adminUserDto, null, null);
+                Set<GrantedAuthority> authorityList =  new HashSet<GrantedAuthority>();
+                authorityList.add(new SimpleGrantedAuthority(adminUserDto.getModule()));
+                Authentication authentication = new UsernamePasswordAuthenticationToken(adminUserDto, null, authorityList);
                 log.info("UsernamePasswordAuthenticationToken:" + authentication);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {

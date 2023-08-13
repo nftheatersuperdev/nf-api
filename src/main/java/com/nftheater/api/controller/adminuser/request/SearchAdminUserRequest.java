@@ -1,6 +1,6 @@
 package com.nftheater.api.controller.adminuser.request;
 
-import com.nftheater.api.constant.ModuleEnum;
+import com.nftheater.api.constant.Module;
 import lombok.Data;
 
 import java.util.UUID;
@@ -11,7 +11,7 @@ public class SearchAdminUserRequest {
     private String email;
     private String firstName;
     private String lastName;
-    private ModuleEnum module;
+    private String module;
     private String role;
     private boolean isActive;
 }

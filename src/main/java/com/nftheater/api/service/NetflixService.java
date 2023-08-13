@@ -81,8 +81,6 @@ public class NetflixService {
         Page<NetflixAccountDto> netflixAccountDtoPage = netflixAccountEntityPage.map(netflixAccountMapper::toDto);
         List<NetflixAccountDto> netflixAccountDtoList = netflixAccountDtoPage.getContent();
 
-        List<AdminUserDto> allAdminUser = adminUserService.getAllAdminUserDto();
-
         PaginationResponse pagination = PaginationUtils.createPagination(netflixAccountDtoPage);
         SearchNetflixAccountResponse response = new SearchNetflixAccountResponse();
         response.setPagination(pagination);
@@ -99,7 +97,15 @@ public class NetflixService {
 
         for (NetflixAccountResponse netflixAccount : netflixAccountResponse) {
             fillEmptyNetflixUser(netflixAccount);
+            netflixAccount.setAvailableDevice(generateAvailableDevice(netflixAccount.getUsers()));
+            netflixAccount.setTotalAvailable(netflixAccount.getAvailableDevice().getAdditionalAvailable()
+                    + netflixAccount.getAvailableDevice().getTvAvailable()
+                    + netflixAccount.getAvailableDevice().getOtherAvailable());
         }
+
+        // Sort
+        netflixAccountResponse.sort(Comparator.comparingInt(NetflixAccountResponse::getTotalAvailable).reversed());
+
         response.setNetflix(netflixAccountResponse);
         return response;
     }
@@ -561,14 +567,17 @@ public class NetflixService {
         int maxOtherUser = maxOtherUserString != null ? Integer.valueOf(maxOtherUserString) : 4;
         // Add additional user to users
         for (NetflixAdditionalAccountResponse additionalAccount : netflixAccount.getAdditionalAccounts()) {
+            NetflixLinkUserResponse linkUserResponse = new NetflixLinkUserResponse();
+            linkUserResponse.setAccountType(NetflixAccountType.ADDITIONAL);
+            linkUserResponse.setSort(2);
             if (additionalAccount.getUser() != null) {
-                NetflixLinkUserResponse linkUserResponse = new NetflixLinkUserResponse();
-                linkUserResponse.setAccountType(NetflixAccountType.ADDITIONAL);
-                linkUserResponse.setSort(2);
                 linkUserResponse.setAccountStatus(getAccountStatus(additionalAccount.getUser()));
                 linkUserResponse.setUser(additionalAccount.getUser());
-                netflixAccount.getUsers().add(linkUserResponse);
+            } else {
+                linkUserResponse.setAccountStatus(getAccountStatus(null));
+                linkUserResponse.setUser(null);
             }
+            netflixAccount.getUsers().add(linkUserResponse);
         }
 
         int countTvAccount = netflixAccount.getUsers().stream()
@@ -580,12 +589,13 @@ public class NetflixService {
             NetflixLinkUserResponse linkTvUser = new NetflixLinkUserResponse();
             if (countTvAccount == 0) {
                 linkTvUser.setAccountType(NetflixAccountType.TV);
+                linkTvUser.setAccountStatus(getAccountStatus(null));
                 linkTvUser.setSort(1);
             } else {
                 linkTvUser.setAccountType(NetflixAccountType.ADDITIONAL);
+                linkTvUser.setAccountStatus("ยังไม่เปิดจอเสริม");
                 linkTvUser.setSort(2);
             }
-            linkTvUser.setAccountStatus(getAccountStatus(null));
             linkTvUser.setUser(null);
             linkTvUser.setColor("#008000");
             netflixAccount.getUsers().add(linkTvUser);
@@ -606,6 +616,21 @@ public class NetflixService {
         netflixAccount.getUsers().stream().forEach(user -> user.setColor(getColor(user.getAccountStatus())));
         // Sort TV-1 ADDITIONAL-2 OTHER-3
         netflixAccount.getUsers().sort(Comparator.comparingInt(NetflixLinkUserResponse::getSort));
+    }
+
+    private AvailableDeviceResponse generateAvailableDevice(List<NetflixLinkUserResponse> users) {
+        AvailableDeviceResponse resp = new AvailableDeviceResponse();
+        resp.setTvAvailable(users.stream()
+                .filter(u -> u.getAccountType().equals(NetflixAccountType.TV) && u.getAccountStatus().equalsIgnoreCase("ว่าง"))
+                .toList().size());
+        resp.setOtherAvailable(users.stream()
+                .filter(u -> u.getAccountType().equals(NetflixAccountType.OTHER) && u.getAccountStatus().equalsIgnoreCase("ว่าง"))
+                .toList().size());
+        resp.setAdditionalAvailable(users.stream()
+                .filter(u -> u.getAccountType().equals(NetflixAccountType.ADDITIONAL) &&
+                        (u.getAccountStatus().equalsIgnoreCase("ว่าง") || u.getAccountStatus().equalsIgnoreCase("ยังไม่เปิดจอเสริม"))
+                ).toList().size());
+        return resp;
     }
 
     private String getAccountStatus(CustomerResponse addAcc) {

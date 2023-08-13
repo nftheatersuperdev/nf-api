@@ -13,7 +13,7 @@ public class AdminUserResponse {
     private String firstName;
     private String lastName;
     private String role;
-    private String module;
+    private String account;
     private Boolean isActive;
     private ZonedDateTime createdDate;
     private ZonedDateTime updatedDate;

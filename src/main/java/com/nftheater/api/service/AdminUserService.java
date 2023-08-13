@@ -154,7 +154,7 @@ public class AdminUserService {
     private Specification<AdminUserEntity> criteriaModuleEqual(SearchAdminUserRequest criteriaRequest,
                                                                       Specification<AdminUserEntity> specification) {
         if (criteriaRequest.getRole() != null) {
-            specification = specification.and(moduleEqual(criteriaRequest.getModule().name()));
+            specification = specification.and(moduleEqual(criteriaRequest.getModule()));
         }
         return specification;
     }

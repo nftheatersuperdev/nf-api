@@ -1,6 +1,7 @@
 package com.nftheater.api.controller.netflix;
 
 import com.google.firebase.auth.FirebaseAuthException;
+import com.nftheater.api.constant.Module;
 import com.nftheater.api.controller.netflix.request.*;
 import com.nftheater.api.controller.netflix.response.*;
 import com.nftheater.api.controller.request.PageableRequest;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +30,7 @@ public class NetflixController {
     private final NetflixService netflixService;
     private final AdminUserService adminUserService;
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PostMapping("/v1/netflix/search")
     public GeneralResponse<SearchNetflixAccountResponse> searchNetflix(
             @RequestBody(required = false)SearchNetflixAccountRequest searchNetflixAccountRequest,
@@ -39,6 +42,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PostMapping("/v1/netflix")
     public GeneralResponse<CreateNetflixAccountResponse> createNetflix(
             HttpServletRequest httpServletRequest,
@@ -51,6 +55,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @GetMapping("/v1/netflix/{accountId}")
     public GeneralResponse<NetflixAccountResponse> getNetflixAccount(@PathVariable("accountId") UUID accountId) throws DataNotFoundException {
         log.info("Start Get Netflix Account : {}", accountId);
@@ -59,6 +64,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PatchMapping("/v1/netflix/{accountId}/user")
     public GeneralResponse<Void> linkUserToNetflixAccount(
             @PathVariable("accountId") UUID accountId,
@@ -73,6 +79,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PostMapping("/v1/netflix/{accountId}/additional")
     public GeneralResponse<CreateNetflixAdditionalAccountResponse> createNetflixAdditionalAccountAndLinkToAccount(
             @PathVariable("accountId") UUID accountId,
@@ -87,6 +94,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PatchMapping("/v1/netflix/{accountId}/status/{status}")
     public GeneralResponse<Void> updateNetflixAccountStatus(
             @PathVariable("accountId") UUID accountId,
@@ -99,6 +107,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @DeleteMapping("/v1/netflix/{accountId}/user/{userId}")
     public GeneralResponse<Void> removeUserFromNetflixAccount(
             @PathVariable("accountId") UUID accountId,
@@ -109,6 +118,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @DeleteMapping("/v1/netflix/{accountId}/additional/{additionalId}/user/{userId}")
     public GeneralResponse<Void> removeUserFromAdditionalNetflixAccount(
             @PathVariable("accountId") UUID accountId,
@@ -120,6 +130,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @GetMapping("/v1/netflix/additional/available")
     public GeneralResponse<List<GetAvailableAdditionAccountResponse>> getAvailableAdditionalAccount() {
         log.info("Start get all available additional account.");
@@ -128,6 +139,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @DeleteMapping("/v1/netflix/{accountId}/additional/{additionalId}")
     public GeneralResponse<Void> unlinkAdditionalFromNetflix(
             @PathVariable("accountId") UUID accountId,
@@ -140,6 +152,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PatchMapping("/v1/netflix/{accountId}/additional/{additionalId}")
     public GeneralResponse<Void> linkExisitingAdditionalToNetflix(
             @PathVariable("accountId") UUID accountId,
@@ -152,6 +165,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PatchMapping("/v1/netflix/{accountId}")
     public GeneralResponse<UpdateNetflixAccountResponse> updateNetflixAccount(
             @PathVariable("accountId") UUID accountId,
@@ -164,6 +178,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @GetMapping("/v1/netflixes")
     public GeneralResponse<List<GetNetflixAccountResponse>> getAllNetflixAccount() {
         log.info("Start all netflix account");
@@ -172,6 +187,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, netflixAccountResponse);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PatchMapping("/v1/netflix/{accountId}/additional/{additionalId}/edit")
     public GeneralResponse<UpdateAdditionalAccountResponse> updateAdditionalAccount(
             @PathVariable("accountId") UUID accountId,
@@ -185,6 +201,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @PostMapping("/v1/netflix/{accountId}/user/transfer")
     public GeneralResponse<Void> transferUser(@PathVariable("accountId") UUID toAccountId,
                                               @RequestBody TransferUserRequest transferUserRequest,
@@ -196,6 +213,7 @@ public class NetflixController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @Secured({Module.ALL, Module.NETFLIX})
     @GetMapping("/v1/netflix/package")
     public GeneralResponse<List<GetNetflixPackageResponse>> getAllPackage() {
         log.info("Start get all netflix package.");

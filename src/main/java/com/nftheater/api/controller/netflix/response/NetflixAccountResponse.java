@@ -21,4 +21,6 @@ public class NetflixAccountResponse {
     private String updatedBy;
     private List<NetflixAdditionalAccountResponse> additionalAccounts = new ArrayList<>();
     private List<NetflixLinkUserResponse> users = new ArrayList<>();
+    private AvailableDeviceResponse availableDevice;
+    private int totalAvailable;
 }

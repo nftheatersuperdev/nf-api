@@ -7,6 +7,7 @@ import com.nftheater.api.exception.DataNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,6 +25,13 @@ public class GlobalExceptionHandlerController {
         final GeneralResponse<String> generalResponse = new GeneralResponse<>(ResponseStatus.FAILED, null, e.getMessage());
         log.error(e.getMessage(), e);
         return ResponseEntity.internalServerError().body(generalResponse);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<GeneralResponse<String>> handleAccessDeniedException(AccessDeniedException e) {
+        String code = ResponseStatus.FAILED;
+        final GeneralResponse<String> generalResponse = new GeneralResponse<>(code, null, e.getMessage());
+        return new ResponseEntity<>(generalResponse, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

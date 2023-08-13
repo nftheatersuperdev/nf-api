@@ -1,6 +1,7 @@
 package com.nftheater.api.controller.adminuser;
 
 import com.google.firebase.auth.FirebaseAuthException;
+import com.nftheater.api.constant.Module;
 import com.nftheater.api.controller.adminuser.request.CreateAdminUserRequest;
 import com.nftheater.api.controller.adminuser.request.SearchAdminUserRequest;
 import com.nftheater.api.controller.adminuser.response.AdminUserProfileResponse;
@@ -17,6 +18,7 @@ import com.nftheater.api.service.AdminUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,14 +44,6 @@ public class AdminUserController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
-    @GetMapping("/v1/admin-user")
-    public GeneralResponse<List<AdminUserResponse>> getAllAdminUser(){
-        log.info("===== Start get all admin user =====");
-        List<AdminUserResponse> allUser = adminUserService.getAllAdminUser();
-        log.info("===== End get all admin user size {} =====", allUser.size());
-        return new GeneralResponse<>(SUCCESS, allUser);
-    }
-
     @GetMapping("/v1/admin-user/profile")
     public GeneralResponse<AdminUserProfileResponse> getAdminUserProfile(HttpServletRequest request) throws FirebaseAuthException, DataNotFoundException {
         log.info("===== Start get my profile =====");
@@ -59,6 +53,14 @@ public class AdminUserController {
         adminUserProfileResponse.setAdminUser(adminUserMapper.toResponse(adminUserDto));
         log.info("===== End get my profile with user Id {} =====", adminUserDto.getId());
         return new GeneralResponse<>(SUCCESS, adminUserProfileResponse);
+    }
+
+    @GetMapping("/v1/admin-user")
+    public GeneralResponse<List<AdminUserResponse>> getAllAdminUser(){
+        log.info("===== Start get all admin user =====");
+        List<AdminUserResponse> allUser = adminUserService.getAllAdminUser();
+        log.info("===== End get all admin user size {} =====", allUser.size());
+        return new GeneralResponse<>(SUCCESS, allUser);
     }
 
     @PostMapping("/v1/admin-users/search")
