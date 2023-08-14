@@ -24,5 +24,6 @@ public class CustomerDto {
     private String createdBy;
     private ZonedDateTime updatedDate;
     private String updatedBy;
+    private String account;
 
 }

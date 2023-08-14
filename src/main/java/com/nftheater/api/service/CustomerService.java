@@ -54,17 +54,14 @@ public class CustomerService {
             if (request.getUserId() != null) {
                 specification = specification.and(userIdContain(request.getUserId()));
             }
-            if (request.getCustomerName() != null) {
-                specification = specification.and(customerNameContain(request.getCustomerName()));
-            }
             if (request.getEmail() != null) {
                 specification = specification.and(emailContain(request.getEmail()));
             }
-            if (request.getPhoneNumber() != null) {
-                specification = specification.and(phoneNumberContain(request.getPhoneNumber()));
-            }
             if (request.getLineId() != null) {
                 specification = specification.and(lineIdContain(request.getLineId()));
+            }
+            if (request.getStatus().size() != 0) {
+                specification = specification.and(customerStatusIn(request.getStatus()));
             }
         }
 
@@ -73,9 +70,14 @@ public class CustomerService {
         List<CustomerDto> customerDtoList = customerDtoPage.getContent();
 
         PaginationResponse pagination = PaginationUtils.createPagination(customerDtoPage);
+
+        List<CustomerResponse> customerResponse = customerMapper.mapDtoToResponses(customerDtoList);
+        customerResponse.sort(Comparator.comparingInt(CustomerResponse::getSort));
+
         SearchCustomerResponse response = new SearchCustomerResponse();
+        response.setCustomer(customerResponse);
         response.setPagination(pagination);
-        response.setCustomer(customerMapper.mapDtoToResponses(customerDtoList));
+
         return response;
     }
 

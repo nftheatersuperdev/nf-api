@@ -65,6 +65,9 @@ public class CustomerEntity {
     @Column(name = "updated_by", length = Integer.MAX_VALUE)
     private String updatedBy;
 
+    @Column(name = "account")
+    private String account;
+
     @OneToMany(mappedBy = "user")
     private List<NetflixAdditionalAccountLinkEntity> netflixAdditionalAccountLinks;
 

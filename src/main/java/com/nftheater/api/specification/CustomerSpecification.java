@@ -4,6 +4,8 @@ import com.nftheater.api.entity.CustomerEntity;
 import com.nftheater.api.entity.CustomerEntity_;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
+
 public class CustomerSpecification {
 
     private static final String PERCENT_SIGN = "%";
@@ -30,6 +32,10 @@ public class CustomerSpecification {
 
     public static Specification<CustomerEntity> lineIdContain(String lineId) {
         return (root, cq, cb) -> cb.like(root.get(CustomerEntity_.LINE_ID), PERCENT_SIGN + lineId + PERCENT_SIGN);
+    }
+
+    public static Specification<CustomerEntity> customerStatusIn(List<String> customerStatus) {
+        return (root, cq, cb) -> cb.in(root.get(CustomerEntity_.CUSTOMER_STATUS)).value(customerStatus);
     }
 
 }
