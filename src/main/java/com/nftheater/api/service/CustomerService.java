@@ -51,17 +51,20 @@ public class CustomerService {
         );
         Specification<CustomerEntity> specification = Specification.where(null);
         if (request != null) {
-            if (request.getUserId() != null) {
+            if (!request.getUserId().isBlank()) {
                 specification = specification.and(userIdContain(request.getUserId()));
             }
-            if (request.getEmail() != null) {
+            if (!request.getEmail().isBlank()) {
                 specification = specification.and(emailContain(request.getEmail()));
             }
-            if (request.getLineId() != null) {
+            if (!request.getLineId().isBlank()) {
                 specification = specification.and(lineIdContain(request.getLineId()));
             }
             if (request.getStatus().size() != 0) {
                 specification = specification.and(customerStatusIn(request.getStatus()));
+            }
+            if (!"ALL".equalsIgnoreCase(request.getAccount())) {
+                specification = specification.and(accountEqual(request.getAccount()));
             }
         }
 

@@ -1,47 +1,51 @@
 package com.nftheater.api.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
-@Entity
-@Table(name = "youtube_package")
-public class YoutubePackageEntity {
+@Entity(name = "youtubeAccountEntity")
+@Table(name = "youtube_account")
+public class YoutubeAccountEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @NotNull
-    @Column(name = "name", nullable = false, length = Integer.MAX_VALUE)
-    private String name;
+    @Column(name = "account_name")
+    private String accountName;
 
-    @NotNull
-    @Column(name = "day", nullable = false)
-    private Integer day;
+    @Column(name = "change_date")
+    private String changeDate;
 
-    @NotNull
-    @Column(name = "price", nullable = false, length = Integer.MAX_VALUE)
-    private String price;
+    @Column(name = "youtube_email")
+    private String youtubeEmail;
+
+    @Column(name = "youtube_password")
+    private String youtubePassword;
 
     @Column(name = "created_date")
     private ZonedDateTime createdDate;
 
-    @Column(name = "created_by", length = Integer.MAX_VALUE)
+    @Column(name = "created_by")
     private String createdBy;
+
+    @Column(name = "account_status")
+    private String accountStatus;
 
     @Column(name = "updated_date")
     private ZonedDateTime updatedDate;
 
-    @Column(name = "updated_by", length = Integer.MAX_VALUE)
+    @Column(name = "updated_by")
     private String updatedBy;
 
-    @Column(name = "type")
-    private String type;
+    @OneToMany(mappedBy = "account")
+    private List<YoutubeAccountLinkEntity> accountLinks;
 
     @PrePersist
     public void prePersist() {
@@ -53,5 +57,4 @@ public class YoutubePackageEntity {
     public void preUpdate() {
         updatedDate = ZonedDateTime.now();
     }
-
 }

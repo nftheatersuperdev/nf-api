@@ -38,4 +38,8 @@ public class CustomerSpecification {
         return (root, cq, cb) -> cb.in(root.get(CustomerEntity_.CUSTOMER_STATUS)).value(customerStatus);
     }
 
+    public static Specification<CustomerEntity> accountEqual(String account) {
+        return (root, cq, cb) -> cb.equal(root.get(CustomerEntity_.ACCOUNT), account);
+    }
+
 }

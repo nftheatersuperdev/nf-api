@@ -1,5 +1,6 @@
 package com.nftheater.api.service;
 
+import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.constant.NetflixAccountType;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
 import com.nftheater.api.controller.customer.response.UpdateCustomerRequest;
@@ -39,7 +40,6 @@ import static com.nftheater.api.specification.NetflixSpecification.*;
 @RequiredArgsConstructor
 public class NetflixService {
 
-    private UUID defaultSystemUUID = UUID.fromString("590b693a-35c1-4026-98ac-37d3cb3076ab");
     private final NetflixAccountMapper netflixAccountMapper;
     private final NetflixPackageMapper netflixPackageMapper;
     private final NetflixRepository netflixRepository;
@@ -117,7 +117,7 @@ public class NetflixService {
         String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
 
         NetflixAccountEntity newNetflixAccount = netflixAccountMapper.toEntity(createNetflixAccountRequest);
-        newNetflixAccount.setAccountName("NF-".concat(nextSeq.toString()));
+        newNetflixAccount.setAccountName(BusinessConstants.NETFLIX_ACCOUNT_PREFIX.concat(nextSeq.toString()));
         newNetflixAccount.setIsActive(true);
         newNetflixAccount.setCreatedBy(adminUser);
         newNetflixAccount.setUpdatedBy(adminUser);
@@ -183,7 +183,7 @@ public class NetflixService {
                 UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
                 updateCustomerRequest.setCustomerStatus(status);
                 try {
-                    customerService.updateCustomer(userId, updateCustomerRequest, defaultSystemUUID);
+                    customerService.updateCustomer(userId, updateCustomerRequest, BusinessConstants.DEFAULT_SYSTEM_UUID);
                 } catch (DataNotFoundException e) {}
                 user.getUser().setCustomerStatus(status);
             }
