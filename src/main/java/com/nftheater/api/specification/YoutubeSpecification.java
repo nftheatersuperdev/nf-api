@@ -25,8 +25,8 @@ public class YoutubeSpecification {
         return null;
     }
 
-    public static Specification<YoutubeAccountEntity> accountStatusEqual(String status) {
-        return (youtubeAccountEntity, cq, cb) -> cb.equal(youtubeAccountEntity.get(YoutubeAccountEntity_.ACCOUNT_STATUS), status);
+    public static Specification<YoutubeAccountEntity> accountStatusIn(List<String> status) {
+        return (youtubeAccountEntity, cq, cb) -> cb.in(youtubeAccountEntity.get(YoutubeAccountEntity_.ACCOUNT_STATUS)).value(status);
     }
 
     public static Specification<YoutubeAccountEntity> accountNameContain(String accountName) {

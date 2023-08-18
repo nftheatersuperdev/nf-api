@@ -34,6 +34,8 @@ import java.util.stream.Collectors;
 
 import static com.nftheater.api.mapper.NetflixAccountMapper.getCustomerStatusFromDayLeft;
 import static com.nftheater.api.specification.NetflixSpecification.*;
+import static com.nftheater.api.utils.BusinessUtils.getAccountStatus;
+import static com.nftheater.api.utils.BusinessUtils.getColor;
 
 @Slf4j
 @Service
@@ -117,7 +119,7 @@ public class NetflixService {
         String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
 
         NetflixAccountEntity newNetflixAccount = netflixAccountMapper.toEntity(createNetflixAccountRequest);
-        newNetflixAccount.setAccountName(BusinessConstants.NETFLIX_ACCOUNT_PREFIX.concat(nextSeq.toString()));
+        newNetflixAccount.setAccountName(BusinessConstants.NETFLIX_PREFIX.concat("-").concat(nextSeq.toString()));
         newNetflixAccount.setIsActive(true);
         newNetflixAccount.setCreatedBy(adminUser);
         newNetflixAccount.setUpdatedBy(adminUser);
@@ -631,26 +633,6 @@ public class NetflixService {
                         (u.getAccountStatus().equalsIgnoreCase("ว่าง") || u.getAccountStatus().equalsIgnoreCase("ยังไม่เปิดจอเสริม"))
                 ).toList().size());
         return resp;
-    }
-
-    private String getAccountStatus(CustomerResponse addAcc) {
-        if (addAcc == null) {
-            return "ว่าง";
-        }
-        if (addAcc.getDayLeft() > 3) {
-           return "ไม่ว่าง";
-        }
-        return "รอ";
-    }
-
-    private String getColor(String acctStatus) {
-        if (acctStatus.equalsIgnoreCase("กำลังใช้งาน")) {
-            return "#FF0000";
-        } else if (acctStatus.contains("รอ")) {
-            return "#FFC100";
-        } else {
-            return "#008000";
-        }
     }
 
 }

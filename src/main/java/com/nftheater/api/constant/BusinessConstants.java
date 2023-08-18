@@ -8,7 +8,7 @@ import java.util.UUID;
 public class BusinessConstants {
 
     public static final UUID DEFAULT_SYSTEM_UUID = UUID.fromString("590b693a-35c1-4026-98ac-37d3cb3076ab");
-    public static final String NETFLIX_ACCOUNT_PREFIX = "NF-";
-    public static final String YOUTUBE_ACCOUNT_PREFIX = "YT-";
+    public static final String NETFLIX_PREFIX = "NF";
+    public static final String YOUTUBE_PREFIX = "YT";
     public static final String PERCENT_SIGN = "%";
 }

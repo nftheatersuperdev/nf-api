@@ -30,6 +30,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.nftheater.api.constant.BusinessConstants.NETFLIX_PREFIX;
+import static com.nftheater.api.constant.BusinessConstants.YOUTUBE_PREFIX;
 import static com.nftheater.api.specification.CustomerSpecification.*;
 
 @Slf4j
@@ -37,7 +39,6 @@ import static com.nftheater.api.specification.CustomerSpecification.*;
 @RequiredArgsConstructor
 public class CustomerService {
 
-    public static final String NF_PREFIX = "NF";
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final AdminUserService adminUserService;
@@ -86,10 +87,10 @@ public class CustomerService {
 
     public CreateCustomerResponse createCustomer(CreateCustomerRequest createCustomerRequest) {
         CustomerDto customerDto = customerMapper.mapRequestToDto(createCustomerRequest);
-        customerDto.setUserId(generateUserId());
+        customerDto.setUserId(generateUserId(createCustomerRequest.getAccount()));
         customerDto.setPassword(generatePassword());
         customerDto.setExpiredDate(ZonedDateTime.now());
-        customerDto.setCustomerStatus("ปกติ");
+        customerDto.setCustomerStatus("กำลังใช้งาน");
         CustomerEntity customerEntity = customerMapper.toEntity(customerDto);
         customerRepository.saveAndFlush(customerEntity);
 
@@ -99,8 +100,8 @@ public class CustomerService {
         createCustomerResponse.setPassword(customerEntity.getPassword());
         return createCustomerResponse;
     }
-    public List<CustomerListResponse> getCustomerList() {
-        List<CustomerEntity> customerEntities = customerRepository.findAll();
+    public List<CustomerListResponse> getCustomerList(String account) {
+        List<CustomerEntity> customerEntities = customerRepository.findByAccount(account);
         List<CustomerDto> customerDtoList = customerEntities.stream().map(customerMapper::toDto).collect(Collectors.toList());
         List<CustomerListResponse> customerListResponses = new ArrayList<>();
         for(CustomerDto dto : customerDtoList) {
@@ -173,9 +174,13 @@ public class CustomerService {
         }
     }
 
-    private String generateUserId() {
+    private String generateUserId(String account) {
         Long userIdSeq = customerRepository.getUserIdSeq();
-        return NF_PREFIX.concat(String.format("%05d", userIdSeq));
+        if ("NETFLIX".equalsIgnoreCase(account)) {
+            return NETFLIX_PREFIX.concat(String.format("%05d", userIdSeq));
+        } else {
+            return YOUTUBE_PREFIX.concat(String.format("%05d", userIdSeq));
+        }
     }
 
     @Named("generatePassword")

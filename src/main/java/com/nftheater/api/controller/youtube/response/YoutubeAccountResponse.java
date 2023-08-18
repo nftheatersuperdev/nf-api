@@ -1,6 +1,5 @@
 package com.nftheater.api.controller.youtube.response;
 
-import com.nftheater.api.controller.netflix.response.AvailableDeviceResponse;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
@@ -22,6 +21,5 @@ public class YoutubeAccountResponse {
     private ZonedDateTime updatedDate;
     private String updatedBy;
     private List<YoutubeLinkUserResponse> users = new ArrayList<>();
-    private AvailableDeviceResponse availableDevice;
-    private int totalAvailable;
+    private int availableDevice;
 }

@@ -1,18 +1,18 @@
 package com.nftheater.api.controller.youtube;
 
+import com.google.firebase.auth.FirebaseAuthException;
 import com.nftheater.api.constant.Module;
-import com.nftheater.api.controller.netflix.request.CreateNetflixAccountRequest;
-import com.nftheater.api.controller.netflix.request.SearchNetflixAccountRequest;
-import com.nftheater.api.controller.netflix.response.CreateNetflixAccountResponse;
-import com.nftheater.api.controller.netflix.response.SearchNetflixAccountResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.GeneralResponse;
 import com.nftheater.api.controller.youtube.request.CreateYoutubeAccountRequest;
 import com.nftheater.api.controller.youtube.request.SearchYoutubeAccountRequest;
+import com.nftheater.api.controller.youtube.request.UpdateLinkUserYoutubeRequest;
 import com.nftheater.api.controller.youtube.response.CreateYoutubeAccountResponse;
 import com.nftheater.api.controller.youtube.response.GetYoutubePackageResponse;
 import com.nftheater.api.controller.youtube.response.SearchYoutubeAccountResponse;
 import com.nftheater.api.exception.DataNotFoundException;
+import com.nftheater.api.exception.InvalidRequestException;
+import com.nftheater.api.service.AdminUserService;
 import com.nftheater.api.service.YoutubeService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +28,13 @@ import static com.nftheater.api.constant.ResponseStatus.SUCCESS;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@Secured({Module.ALL, Module.YOUTUBE})
 public class YoutubeController {
 
     private final YoutubeService youtubeService;
+    private final AdminUserService adminUserService;
 
-    @Secured({Module.ALL, Module.YOUTUBE})
+
     @PostMapping("/v1/youtube/search")
     public GeneralResponse<SearchYoutubeAccountResponse> searchYoutube(
             @RequestBody(required = false) SearchYoutubeAccountRequest searchYoutubeAccountRequest,
@@ -44,7 +46,6 @@ public class YoutubeController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
-    @Secured({Module.ALL, Module.YOUTUBE})
     @PostMapping("/v1/youtube")
     public GeneralResponse<CreateYoutubeAccountResponse> createYoutube(
             HttpServletRequest httpServletRequest,
@@ -57,7 +58,6 @@ public class YoutubeController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
-    @Secured({Module.ALL, Module.YOUTUBE})
     @GetMapping("/v1/youtube/package/{type}")
     public GeneralResponse<List<GetYoutubePackageResponse>> getYoutubePackage(
             @PathVariable("type") String type){
@@ -65,6 +65,21 @@ public class YoutubeController {
         List<GetYoutubePackageResponse> response = youtubeService.getAllYoutubePackage(type);
         log.info("End get youtube package for {} size : {}", type, response.size());
         return new GeneralResponse<>(SUCCESS, response);
+    }
+
+    @PatchMapping("/v1/youtube/{accountId}/user")
+    public GeneralResponse<Void> linkUserToYoutubeAccount(
+            @PathVariable("accountId") UUID accountId,
+            @RequestBody UpdateLinkUserYoutubeRequest updateLinkUserYoutubeRequest,
+            HttpServletRequest httpServletRequest)
+            throws DataNotFoundException, InvalidRequestException, FirebaseAuthException {
+        log.info("Start link user to Youtube : {}", accountId);
+        String bearerToken = httpServletRequest.getHeader("Authorization");
+        UUID adminId = adminUserService.getAdminUserByFirebaseToken(bearerToken.substring(7, bearerToken.length())).getId();
+//        netflixService.linkUserToNetflixAccount(accountId, updateLinkUserNetflixRequest, userId, false);
+        youtubeService.linkUserToYoutubeAccount(accountId, updateLinkUserYoutubeRequest, adminId, false);
+        log.info("End link user to netflix : {}", accountId);
+        return new GeneralResponse<>(SUCCESS, null);
     }
 
 }

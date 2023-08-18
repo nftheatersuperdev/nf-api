@@ -61,11 +61,10 @@ public interface YoutubeMapper extends EntityMapper<YoutubeAccountDto, YoutubeAc
 
     @Named("getTypeSort")
     public static int getSortByAccountType(String type) {
-        if (type.equalsIgnoreCase(NetflixAccountType.TV.name())) {
-            return 1;
-        } else if (type.equalsIgnoreCase(NetflixAccountType.ADDITIONAL.name())) {
+        if ("USER".equalsIgnoreCase(type)) {
             return 2;
         }
-        return 3;
+        return 99;
     }
+
 }

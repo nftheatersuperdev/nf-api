@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,6 +14,8 @@ import java.util.UUID;
 public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>, JpaSpecificationExecutor<CustomerEntity> {
 
     Optional<CustomerEntity> findByUserId(String userId);
+
+    List<CustomerEntity> findByAccount(String account);
 
     @Query(value = "SELECT nextval('user_id_seq')", nativeQuery = true)
     Long getUserIdSeq();

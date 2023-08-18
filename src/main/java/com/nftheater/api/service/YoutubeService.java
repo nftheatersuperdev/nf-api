@@ -2,20 +2,22 @@ package com.nftheater.api.service;
 
 import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
+import com.nftheater.api.controller.netflix.response.NetflixLinkUserResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.controller.youtube.request.CreateYoutubeAccountRequest;
 import com.nftheater.api.controller.youtube.request.SearchYoutubeAccountRequest;
+import com.nftheater.api.controller.youtube.request.UpdateLinkUserYoutubeRequest;
 import com.nftheater.api.controller.youtube.response.*;
 import com.nftheater.api.dto.YoutubeAccountDto;
 import com.nftheater.api.dto.YoutubePackageDto;
-import com.nftheater.api.entity.AdminUserEntity;
-import com.nftheater.api.entity.YoutubeAccountEntity;
-import com.nftheater.api.entity.YoutubeAccountEntity_;
+import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
+import com.nftheater.api.exception.InvalidRequestException;
 import com.nftheater.api.mapper.YoutubeMapper;
 import com.nftheater.api.mapper.YoutubePackageMapper;
+import com.nftheater.api.repository.YoutubeAccountLinkRepository;
 import com.nftheater.api.repository.YoutubePackageRepository;
 import com.nftheater.api.repository.YoutubeRepository;
 import com.nftheater.api.utils.PaginationUtils;
@@ -30,10 +32,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.nftheater.api.specification.YoutubeSpecification.*;
+import static com.nftheater.api.utils.BusinessUtils.getColor;
 
 @Slf4j
 @Service
@@ -42,8 +48,10 @@ public class YoutubeService {
 
     private final YoutubeRepository youtubeRepository;
     private final YoutubePackageRepository youtubePackageRepository;
+    private final YoutubeAccountLinkRepository youtubeAccountLinkRepository;
     private final YoutubeMapper youtubeMapper;
     private final YoutubePackageMapper youtubePackageMapper;
+    private final CustomerService customerService;
     private final AdminUserService adminUserService;
     private final SystemConfigService systemConfigService;
 
@@ -70,7 +78,7 @@ public class YoutubeService {
                 specification = specification.and(customerStatusIn(request.getCustomerStatus()));
             }
             if (!request.getAccountName().isBlank()) {
-                specification = specification.and(accountStatusEqual(request.getAccountStatus()));
+                specification = specification.and(accountStatusIn(request.getAccountStatus()));
             }
         }
         Page<YoutubeAccountEntity> youtubeAccountEntityPage = youtubeRepository.findAll(specification, pageable);
@@ -83,13 +91,21 @@ public class YoutubeService {
         adminUser.setAccountStatus("Admin");
         adminUser.setAccountType("ADMIN");
         adminUser.setUser(new CustomerResponse());
+        adminUser.setSort(1);
         for(YoutubeAccountResponse acct : youtubeAccountResponse){
             acct.getUsers().add(adminUser);
             fillEmptyYoutubeUser(acct);
+            acct.setAvailableDevice(acct.getUsers().stream()
+                    .filter(u -> "ว่าง".equalsIgnoreCase(u.getAccountStatus()))
+                    .toList().size());
         }
 
         PaginationResponse pagination = PaginationUtils.createPagination(youtubeAccountDtoPage);
         SearchYoutubeAccountResponse response = new SearchYoutubeAccountResponse();
+
+        // Sort
+        youtubeAccountResponse.sort(Comparator.comparingInt(YoutubeAccountResponse::getAvailableDevice).reversed());
+
         response.setPagination(pagination);
         response.setYoutube(youtubeAccountResponse);
         return response;
@@ -101,7 +117,7 @@ public class YoutubeService {
         Long nextSeq = youtubeRepository.getYoutubeAccountNameSeq();
 
         YoutubeAccountEntity newYoutubeAccount = youtubeMapper.toEntity(createRequest);
-        newYoutubeAccount.setAccountName(BusinessConstants.YOUTUBE_ACCOUNT_PREFIX.concat(nextSeq.toString()));
+        newYoutubeAccount.setAccountName(BusinessConstants.YOUTUBE_PREFIX.concat("-").concat(nextSeq.toString()));
         newYoutubeAccount.setAccountStatus("กำลังใช้งาน");
         newYoutubeAccount.setCreatedBy(adminUser);
         newYoutubeAccount.setUpdatedBy(adminUser);
@@ -134,9 +150,58 @@ public class YoutubeService {
             userLink.setAccountStatus("ว่าง");
             userLink.setUser(null);
             userLink.setColor("#008000");
+            userLink.setSort(99);
             youtubeAccount.getUsers().add(userLink);
             countUser++;
         }
+        // Set color
+        youtubeAccount.getUsers().stream().forEach(user -> user.setColor(getColor(user.getAccountStatus())));
 
+        // Sort ADMIN-1 USER-2
+        youtubeAccount.getUsers().sort(Comparator.comparingInt(YoutubeLinkUserResponse::getSort));
+
+    }
+
+    @Transactional
+    public void linkUserToYoutubeAccount(UUID accountId, UpdateLinkUserYoutubeRequest updateLinkUserYoutubeRequest, UUID adminId, boolean isTransfer) throws DataNotFoundException, InvalidRequestException {
+        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
+        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+
+        final YoutubeAccountEntity youtubeAccountEntity = youtubeRepository.findById(accountId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + accountId));
+        final CustomerEntity customerEntity = customerService.getCustomerByUserId(updateLinkUserYoutubeRequest.getUserId());
+
+        // Validate
+        final YoutubeAccountLinkEntity existingAccountLink = youtubeAccountLinkRepository
+                .findByUserId(customerEntity.getId())
+                .orElse(null);
+        if (existingAccountLink != null) {
+            throw new InvalidRequestException("ลูกค้าถูกเพิ่มในบัญชีนี้หรือบัญชีอื่นแล้ว");
+        }
+
+        // Check max other
+        int existingUser = youtubeAccountEntity.getAccountLinks().stream()
+                .filter(type -> "USER".equalsIgnoreCase(type.getAccountType()))
+                .collect(Collectors.toList()).size();
+        int maxOther = Integer.valueOf(systemConfigService.getSystemConfigByConfigName("YOUTUBE_MAX_USER").getConfigValue());
+        if (maxOther <= existingUser) {
+            throw new InvalidRequestException("จำนวนผู้ใช้งานของบัญชี Youtube " + youtubeAccountEntity.getAccountName() + " เต็มหมดแล้ว กรุณาเลือกบัญชีอื่น");
+        }
+
+        YoutubeAccountLinkEntity accountLinkEntity = new YoutubeAccountLinkEntity();
+        YoutubeAccountLinkEntityId id = new YoutubeAccountLinkEntityId();
+        id.setAccountId(accountId);
+        id.setUserId(customerEntity.getId());
+        accountLinkEntity.setId(id);
+        accountLinkEntity.setAccountType("USER");
+        accountLinkEntity.setAddedDate(ZonedDateTime.now());
+        accountLinkEntity.setAddedBy(adminUser);
+        accountLinkEntity.setAccount(youtubeAccountEntity);
+        accountLinkEntity.setUser(customerEntity);
+
+        youtubeAccountLinkRepository.save(accountLinkEntity);
+
+        // Extend Customer day left.
+        long newDayLeft = customerService.extendDayForUser(customerEntity, updateLinkUserYoutubeRequest.getExtendDay(), adminUser);
     }
 }

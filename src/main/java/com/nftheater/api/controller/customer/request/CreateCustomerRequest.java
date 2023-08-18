@@ -15,5 +15,7 @@ public class CreateCustomerRequest {
     private String lineId;
     @NotBlank
     private String lineUrl;
+    @NotBlank
+    private String account;
     private UUID createdBy;
 }

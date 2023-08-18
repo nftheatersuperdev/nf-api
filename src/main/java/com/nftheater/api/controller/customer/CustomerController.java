@@ -50,10 +50,10 @@ public class CustomerController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
-    @GetMapping("/v1/customer/list")
-    public GeneralResponse<List<CustomerListResponse>> getCustomerList() {
+    @GetMapping("/v1/customer/account/{account}")
+    public GeneralResponse<List<CustomerListResponse>> getCustomerList(@PathVariable("account") String account) {
         log.info("Start Get Customer for option list");
-        List<CustomerListResponse> customerListResponseList = customerService.getCustomerList();
+        List<CustomerListResponse> customerListResponseList = customerService.getCustomerList(account);
         log.info("End Get Customer for option list size : {}",customerListResponseList.size());
         return new GeneralResponse<>(SUCCESS, customerListResponseList);
     }

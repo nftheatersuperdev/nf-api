@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -18,6 +19,7 @@ public interface CustomerMapper extends EntityMapper<CustomerDto, CustomerEntity
     CustomerDto toDto(CustomerEntity entity);
 
     @Mapping(source = "customerStatus", target = "sort", qualifiedByName = "getCustomerStatusSort")
+    @Mapping(source = "expiredDate", target = "dayLeft", qualifiedByName = "calculateDayLeft")
     CustomerResponse toResponse(CustomerDto dto);
 
     List<CustomerResponse> mapDtoToResponses(List<CustomerDto> dtos);
@@ -37,6 +39,10 @@ public interface CustomerMapper extends EntityMapper<CustomerDto, CustomerEntity
         } else {
             return 99;
         }
+    }
+    @Named("calculateDayLeft")
+    public static long calculateDayLeft(ZonedDateTime expireDate) {
+        return ChronoUnit.DAYS.between(ZonedDateTime.now(), expireDate);
     }
 
 }
