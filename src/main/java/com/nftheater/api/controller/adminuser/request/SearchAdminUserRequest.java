@@ -1,17 +1,12 @@
 package com.nftheater.api.controller.adminuser.request;
 
-import com.nftheater.api.constant.Module;
 import lombok.Data;
-
-import java.util.UUID;
 
 @Data
 public class SearchAdminUserRequest {
-    private UUID id;
     private String email;
-    private String firstName;
-    private String lastName;
+    private String adminName;
     private String module;
     private String role;
-    private boolean isActive;
+    private Boolean isActive;
 }

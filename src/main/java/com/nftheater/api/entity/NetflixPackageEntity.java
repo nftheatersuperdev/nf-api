@@ -41,6 +41,9 @@ public class NetflixPackageEntity {
     @Column(name = "updated_by", length = Integer.MAX_VALUE)
     private String updatedBy;
 
+    @Column(name = "device")
+    private String device;
+
     @PrePersist
     public void prePersist() {
         createdDate = ZonedDateTime.now();

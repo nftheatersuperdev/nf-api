@@ -6,9 +6,7 @@ import com.nftheater.api.controller.netflix.response.NetflixLinkUserResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
-import com.nftheater.api.controller.youtube.request.CreateYoutubeAccountRequest;
-import com.nftheater.api.controller.youtube.request.SearchYoutubeAccountRequest;
-import com.nftheater.api.controller.youtube.request.UpdateLinkUserYoutubeRequest;
+import com.nftheater.api.controller.youtube.request.*;
 import com.nftheater.api.controller.youtube.response.*;
 import com.nftheater.api.dto.YoutubeAccountDto;
 import com.nftheater.api.dto.YoutubePackageDto;
@@ -33,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -77,7 +76,7 @@ public class YoutubeService {
             if (request.getCustomerStatus().size() != 0) {
                 specification = specification.and(customerStatusIn(request.getCustomerStatus()));
             }
-            if (!request.getAccountName().isBlank()) {
+            if (request.getAccountStatus().size() != 0) {
                 specification = specification.and(accountStatusIn(request.getAccountStatus()));
             }
         }
@@ -112,18 +111,28 @@ public class YoutubeService {
     }
     public CreateYoutubeAccountResponse createYoutubeAccount(CreateYoutubeAccountRequest createRequest) throws DataNotFoundException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(createRequest.getCreatedBy());
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         Long nextSeq = youtubeRepository.getYoutubeAccountNameSeq();
 
         YoutubeAccountEntity newYoutubeAccount = youtubeMapper.toEntity(createRequest);
-        newYoutubeAccount.setAccountName(BusinessConstants.YOUTUBE_PREFIX.concat("-").concat(nextSeq.toString()));
-        newYoutubeAccount.setAccountStatus("กำลังใช้งาน");
+        newYoutubeAccount.setAccountName(BusinessConstants.YOUTUBE_PREFIX.concat("-").concat(String.format("%05d", nextSeq)));
+        newYoutubeAccount.setAccountStatus("กำลังใช้งานอยู่");
         newYoutubeAccount.setCreatedBy(adminUser);
         newYoutubeAccount.setUpdatedBy(adminUser);
         youtubeRepository.saveAndFlush(newYoutubeAccount);
 
         return new CreateYoutubeAccountResponse(newYoutubeAccount.getId(), newYoutubeAccount.getAccountName());
+    }
+
+    @Transactional(readOnly = true)
+    public YoutubeAccountResponse getYoutubeAccountById(UUID accountId) throws DataNotFoundException{
+       final YoutubeAccountDto youtubeAccount = youtubeRepository.findById(accountId)
+               .map(youtubeMapper::toDto)
+               .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี " + accountId));
+
+       YoutubeAccountResponse accountResponse = youtubeMapper.toResponse(youtubeAccount);
+       return accountResponse;
     }
 
     public List<GetYoutubePackageResponse> getAllYoutubePackage(String packageType) {
@@ -163,9 +172,9 @@ public class YoutubeService {
     }
 
     @Transactional
-    public void linkUserToYoutubeAccount(UUID accountId, UpdateLinkUserYoutubeRequest updateLinkUserYoutubeRequest, UUID adminId, boolean isTransfer) throws DataNotFoundException, InvalidRequestException {
+    public void linkUserToYoutubeAccount(UUID accountId, UpdateLinkUserYoutubeRequest updateLinkUserYoutubeRequest, UUID adminId) throws DataNotFoundException, InvalidRequestException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         final YoutubeAccountEntity youtubeAccountEntity = youtubeRepository.findById(accountId)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + accountId));
@@ -203,5 +212,92 @@ public class YoutubeService {
 
         // Extend Customer day left.
         long newDayLeft = customerService.extendDayForUser(customerEntity, updateLinkUserYoutubeRequest.getExtendDay(), adminUser);
+    }
+
+    public void removeUserFromYoutubeAccount(UUID accountId, String userId) throws DataNotFoundException {
+        final YoutubeAccountEntity youtubeAccountEntity = youtubeRepository.findById(accountId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + accountId));
+        final CustomerEntity customerEntity = customerService.getCustomerByUserId(userId);
+
+        YoutubeAccountLinkEntityId id = new YoutubeAccountLinkEntityId();
+        id.setAccountId(accountId);
+        id.setUserId(customerEntity.getId());
+
+        final YoutubeAccountLinkEntity removedEntity = youtubeAccountLinkRepository.findById(id)
+                .orElse(null);
+        if (removedEntity == null) {
+            throw new DataNotFoundException("ไม่พบลูกค้า " + userId + " ในบัญชี Youtube : " + youtubeAccountEntity.getAccountName());
+        }
+
+        youtubeAccountLinkRepository.delete(removedEntity);
+    }
+
+    @Transactional
+    public void updateYoutubeAccountStatus(UUID accountId, String status, UUID adminId) throws DataNotFoundException, InvalidRequestException {
+        final YoutubeAccountEntity youtubeAccountEntity = youtubeRepository.findById(accountId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + accountId));
+        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
+        String adminUser = adminUserEntity.getAdminName();
+
+        if (!status.isBlank() && status != null) {
+            if ("ปิดการใช้งานชั่วคราว".equalsIgnoreCase(status)) {
+                List<YoutubeAccountLinkEntity> accountLink = youtubeAccountLinkRepository.findByAccountId(accountId);
+                if (accountLink.size() != 1) {
+                    throw new InvalidRequestException("ไม่สามารถปิดบัญชีชั่วคราวได้ เนื่องจากยังมีลูกค้าอยู่ในบัญชีนี้");
+                }
+            }
+        }
+
+        youtubeAccountEntity.setAccountStatus(status);
+        youtubeAccountEntity.setUpdatedBy(adminUser);
+    }
+
+    @Transactional
+    public YoutubeAccountResponse updateYoutubeAccount(UUID accountId, UUID adminId, UpdateYoutubeAccountRequest request) throws DataNotFoundException{
+        final YoutubeAccountEntity youtubeAccountEntity = youtubeRepository.findById(accountId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + accountId));
+        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
+        String adminUser = adminUserEntity.getAdminName();
+
+        youtubeAccountEntity.setUpdatedBy(adminUser);
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            youtubeAccountEntity.setYoutubePassword(request.getPassword());
+        }
+        if (request.getChangeDate() != null && !request.getChangeDate().isEmpty()) {
+            youtubeAccountEntity.setChangeDate(request.getChangeDate());
+        }
+        YoutubeAccountResponse response = youtubeMapper.toResponse(youtubeMapper.toDto(youtubeAccountEntity));
+        return response;
+    }
+
+    @Transactional
+    public void transferUserToNewAccount(UUID toAccountId, TransferUserRequest transferUserRequest, UUID adminId) throws DataNotFoundException, InvalidRequestException {
+        // Get Youtube Account
+        final YoutubeAccountEntity toYoutubeAccountEntity = youtubeRepository.findById(toAccountId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + toAccountId));
+        final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
+        String adminUser = adminUserEntity.getAdminName();
+
+        int existingUser = toYoutubeAccountEntity.getAccountLinks().size();
+        int maxUser = Integer.valueOf(systemConfigService.getSystemConfigByConfigName("YOUTUBE_MAX_USER").getConfigValue());
+        if (maxUser < transferUserRequest.getUserIds().size() + existingUser - 1) {
+            throw new InvalidRequestException("ไม่สามารถย้ายลูกค้าได้ เนื่่องจากจำนวนลูกค้าในบัญชี "+ toYoutubeAccountEntity.getAccountName() + " เต็ม");
+        }
+
+        // Get Customer ID
+        List<CustomerEntity> customerEntities = new ArrayList<>();
+        for (String userId : transferUserRequest.getUserIds()) {
+            customerEntities.add(customerService.getCustomerByUserId(userId));
+        }
+        // Get Customer Entity
+        for(CustomerEntity customerEntity : customerEntities) {
+            // Remove User
+            removeUserFromYoutubeAccount(transferUserRequest.getFromAccountId(), customerEntity.getUserId());
+            // Link to new Account
+            UpdateLinkUserYoutubeRequest updateLinkUserYoutubeRequest = new UpdateLinkUserYoutubeRequest();
+            updateLinkUserYoutubeRequest.setUserId(customerEntity.getUserId());
+            updateLinkUserYoutubeRequest.setExtendDay(0);
+            linkUserToYoutubeAccount(toAccountId, updateLinkUserYoutubeRequest, adminId);
+        }
     }
 }

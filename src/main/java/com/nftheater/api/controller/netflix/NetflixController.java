@@ -214,10 +214,10 @@ public class NetflixController {
     }
 
     @Secured({Module.ALL, Module.NETFLIX})
-    @GetMapping("/v1/netflix/package")
-    public GeneralResponse<List<GetNetflixPackageResponse>> getAllPackage() {
+    @GetMapping("/v1/netflix/package/{device}")
+    public GeneralResponse<List<GetNetflixPackageResponse>> getAllPackage(@PathVariable("device") String device) {
         log.info("Start get all netflix package.");
-        List<GetNetflixPackageResponse> responses = netflixService.getAllNetflixPackage();
+        List<GetNetflixPackageResponse> responses = netflixService.getAllNetflixPackageByDevice(device);
         log.info("End get all netflix package size : {}", responses.size());
         return new GeneralResponse<>(SUCCESS, responses);
     }

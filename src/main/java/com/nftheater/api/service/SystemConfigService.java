@@ -77,7 +77,7 @@ public class SystemConfigService {
 
     public CreateSystemConfigResponse createSystemConfig(CreateSystemConfigRequest createSystemConfigRequest)  throws InvalidRequestException, DataNotFoundException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(createSystemConfigRequest.getCreatedBy());
-        String createBy = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String createBy = adminUserEntity.getAdminName();
         boolean isExistsConfig = systemConfigRepository.existsByConfigName(createSystemConfigRequest.getConfigName());
         if(isExistsConfig) {
             throw new InvalidRequestException("Config " + createSystemConfigRequest.getConfigName() + " is exist in System.");

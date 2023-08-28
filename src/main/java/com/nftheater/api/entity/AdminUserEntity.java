@@ -20,11 +20,8 @@ public class AdminUserEntity {
     @Column
     private String email;
 
-    @Column(name = "first_name")
-    private String firstName;
-
-    @Column(name = "last_name")
-    private String lastName;
+    @Column(name = "admin_name")
+    private String adminName;
 
     @Column
     private String role;

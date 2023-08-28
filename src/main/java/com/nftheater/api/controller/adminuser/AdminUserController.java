@@ -36,6 +36,7 @@ public class AdminUserController {
     private final AdminUserService adminUserService;
     private final AdminUserMapper adminUserMapper;
 
+    @Secured({Module.ALL})
     @PostMapping("/v1/admin-users")
     public GeneralResponse<CreateAdminUserResponse> createAdminUser(@RequestBody CreateAdminUserRequest request) throws FirebaseAuthException {
         log.info("Start create new admin user with Email and Password");
@@ -44,6 +45,7 @@ public class AdminUserController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @Secured({Module.ALL, Module.YOUTUBE, Module.NETFLIX})
     @GetMapping("/v1/admin-user/profile")
     public GeneralResponse<AdminUserProfileResponse> getAdminUserProfile(HttpServletRequest request) throws FirebaseAuthException, DataNotFoundException {
         log.info("===== Start get my profile =====");
@@ -55,6 +57,7 @@ public class AdminUserController {
         return new GeneralResponse<>(SUCCESS, adminUserProfileResponse);
     }
 
+    @Secured({Module.ALL})
     @GetMapping("/v1/admin-user")
     public GeneralResponse<List<AdminUserResponse>> getAllAdminUser(){
         log.info("===== Start get all admin user =====");
@@ -63,6 +66,7 @@ public class AdminUserController {
         return new GeneralResponse<>(SUCCESS, allUser);
     }
 
+    @Secured({Module.ALL})
     @PostMapping("/v1/admin-users/search")
     public GeneralResponse<SearchAdminUserResponse> searchAdminUser(
             @RequestBody(required = false) SearchAdminUserRequest searchAdminUserRequest,

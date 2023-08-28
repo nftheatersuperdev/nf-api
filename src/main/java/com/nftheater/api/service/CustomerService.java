@@ -122,7 +122,7 @@ public class CustomerService {
         final CustomerEntity customerEntity = customerRepository.findByUserId(userId)
                 .orElseThrow(() -> new DataNotFoundException("Customer ID " + userId + " is not found."));
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         long availableDay = this.extendDayForUser(customerEntity, request.getExtendDay(), adminUser);
         CustomerDto customerDto = customerMapper.toDto(customerEntity);
@@ -151,7 +151,7 @@ public class CustomerService {
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลลูกค้า"));
 
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         CustomerEntity savedEntity = customerEntity;
         savedEntity.setCustomerStatus(updateCustomerRequest.getCustomerStatus());

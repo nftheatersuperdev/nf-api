@@ -18,12 +18,8 @@ public class AdminUserSpecification {
         return (root, cq, cb) -> cb.equal(root.get(AdminUserEntity_.id), adminId);
     }
 
-    public static Specification<AdminUserEntity> firstNameContain(String firstName) {
-        return (root, cq, cb) -> cb.like(root.get(AdminUserEntity_.firstName), PERCENT_SIGN + firstName + PERCENT_SIGN);
-    }
-
-    public static Specification<AdminUserEntity> lastNameContain(String lastName) {
-        return (root, cq, cb) -> cb.like(root.get(AdminUserEntity_.lastName), PERCENT_SIGN + lastName + PERCENT_SIGN);
+    public static Specification<AdminUserEntity> nameContain(String firstName) {
+        return (root, cq, cb) -> cb.like(root.get(AdminUserEntity_.adminName), PERCENT_SIGN + firstName + PERCENT_SIGN);
     }
 
     public static Specification<AdminUserEntity> emailContain(String email) {
@@ -38,7 +34,7 @@ public class AdminUserSpecification {
         return (root, cq, cb) -> cb.equal(root.get(AdminUserEntity_.role), role);
     }
 
-    public static Specification<AdminUserEntity> activeStatusEqual(boolean isActive) {
+    public static Specification<AdminUserEntity> activeStatusEqual(Boolean isActive) {
         return (root, cq, cb) -> cb.equal(root.get(AdminUserEntity_.isActive), isActive);
     }
 

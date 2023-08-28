@@ -10,8 +10,7 @@ public class AdminUserResponse {
     private UUID id;
     private String firebaseId;
     private String email;
-    private String firstName;
-    private String lastName;
+    private String adminName;
     private String role;
     private String account;
     private Boolean isActive;

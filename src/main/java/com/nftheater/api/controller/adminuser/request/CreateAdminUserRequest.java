@@ -5,10 +5,7 @@ import lombok.Data;
 
 @Data
 public class CreateAdminUserRequest {
-    private String email;
-    private String password;
-    private String firstName;
-    private String lastName;
-    private String module;
+    private String firebaseToken;
+    private String adminName;
     private String role;
 }

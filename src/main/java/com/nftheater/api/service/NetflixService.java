@@ -116,10 +116,10 @@ public class NetflixService {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(createNetflixAccountRequest.getCreatedBy());
 
         Long nextSeq = netflixRepository.getNetflixAccountNameSeq();
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         NetflixAccountEntity newNetflixAccount = netflixAccountMapper.toEntity(createNetflixAccountRequest);
-        newNetflixAccount.setAccountName(BusinessConstants.NETFLIX_PREFIX.concat("-").concat(nextSeq.toString()));
+        newNetflixAccount.setAccountName(BusinessConstants.NETFLIX_PREFIX.concat("-").concat(String.format("%05d", nextSeq)));
         newNetflixAccount.setIsActive(true);
         newNetflixAccount.setCreatedBy(adminUser);
         newNetflixAccount.setUpdatedBy(adminUser);
@@ -130,7 +130,7 @@ public class NetflixService {
 
     public CreateNetflixAdditionalAccountResponse createNetflixAdditionalAccount(UUID accountId, CreateNetflixAdditionalAccountRequest createNetflixAdditionalAccountRequest) throws DataNotFoundException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(UUID.fromString(createNetflixAdditionalAccountRequest.getCreatedBy()));
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
         final NetflixAccountEntity netflixAccountEntity = netflixRepository.findById(accountId)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
 
@@ -197,7 +197,7 @@ public class NetflixService {
     @Transactional
     public void linkUserToNetflixAccount(UUID accountId, UpdateLinkUserNetflixRequest request, UUID userId, boolean isTransfer) throws DataNotFoundException, InvalidRequestException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(userId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
         final NetflixAccountEntity netflixAccountEntity = netflixRepository.findById(accountId)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
         final CustomerEntity customerEntity = customerService.getCustomerByUserId(request.getUserId());
@@ -326,7 +326,7 @@ public class NetflixService {
         final NetflixAccountEntity netflixAccountEntity = netflixRepository.findById(accountId)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(userId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         if(!status) {
             List<NetflixAccountLinkEntity> accountLink = netflixAccountLinkRepository.findByAccountId(accountId);
@@ -424,7 +424,7 @@ public class NetflixService {
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชีเสริม : " + additionalId));
 
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
 
         NetflixLinkAdditionalEntityId id = new NetflixLinkAdditionalEntityId();
@@ -445,7 +445,7 @@ public class NetflixService {
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
 
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         NetflixAccountEntity savedfNetflixAccountEntity = netflixAccountEntity;
         savedfNetflixAccountEntity.setNetflixPassword(request.getPassword());
@@ -481,7 +481,7 @@ public class NetflixService {
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชีเสริม : " + additionalId));
 
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(adminId);
-        String adminUser = adminUserEntity.getFirstName() + " " + adminUserEntity.getLastName();
+        String adminUser = adminUserEntity.getAdminName();
 
         NetflixLinkAdditionalEntityId checkId = new NetflixLinkAdditionalEntityId();
         checkId.setAdditionalId(additionalId);
@@ -544,8 +544,8 @@ public class NetflixService {
         
     }
 
-    public List<GetNetflixPackageResponse> getAllNetflixPackage() {
-        List<NetflixPackageDto> allPackageDtos = netflixPackageRepository.findAll()
+    public List<GetNetflixPackageResponse> getAllNetflixPackageByDevice(String device) {
+        List<NetflixPackageDto> allPackageDtos = netflixPackageRepository.findByDevice(device)
                 .stream().map(netflixPackageMapper::toDto)
                 .toList();
         log.info("All Netflix package size : {}", allPackageDtos.size());

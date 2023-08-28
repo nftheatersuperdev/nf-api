@@ -63,8 +63,14 @@ public class AdminUserService {
     }
 
     public CreateAdminUserResponse createAdminUser(CreateAdminUserRequest request) throws FirebaseAuthException {
-        UserRecord firebaseUser = firebaseService.registerEmailAndPassword(request.getEmail(), request.getPassword());
-        AdminUserEntity adminUserEntity = adminUserMapper.toEntity(firebaseUser.getUid(), request, true);
+        FirebaseToken firebaseToken = firebaseService.verifyToken(request.getFirebaseToken());
+        AdminUserEntity adminUserEntity = adminUserMapper.toEntity(firebaseToken.getUid(), request, true);
+        adminUserEntity.setEmail(firebaseToken.getEmail());
+        if (request.getRole().contains("NETFLIX")) {
+            adminUserEntity.setModule("NETFLIX");
+        } else {
+            adminUserEntity.setModule("YOUTUBE");
+        }
         AdminUserEntity newUser = adminUserRepository.save(adminUserEntity);
         return new CreateAdminUserResponse(newUser.getId());
     }
@@ -91,12 +97,11 @@ public class AdminUserService {
 
         Specification<AdminUserEntity> specification = Specification.where(null);
         if (criteriaRequest != null) {
-            specification = criteriaIdEqual(criteriaRequest, specification);
-            specification = criteriaFirstNameContain(criteriaRequest, specification);
-            specification = criteriaLastNameContain(criteriaRequest, specification);
+            specification = criteriaAdminNameContain(criteriaRequest, specification);
             specification = criteriaEmailContain(criteriaRequest, specification);
             specification = criteriaRoleEqual(criteriaRequest, specification);
             specification = criteriaModuleEqual(criteriaRequest, specification);
+            specification = criteriaActiveStatusEqual(criteriaRequest, specification);
         }
 
         Page<AdminUserEntity> adminUserEntityPage = adminUserRepository.findAll(specification, pageable);
@@ -114,38 +119,23 @@ public class AdminUserService {
 
     private Specification<AdminUserEntity> criteriaEmailContain(SearchAdminUserRequest criteriaRequest,
                                                                 Specification<AdminUserEntity> specification) {
-        if (criteriaRequest.getEmail() != null) {
+        if (criteriaRequest.getEmail() != null && !criteriaRequest.getEmail().isEmpty()) {
             specification = specification.and(emailContain(criteriaRequest.getEmail()));
         }
         return specification;
     }
 
-    private Specification<AdminUserEntity> criteriaLastNameContain(SearchAdminUserRequest criteriaRequest,
-                                                                   Specification<AdminUserEntity> specification) {
-        if (criteriaRequest.getLastName() != null) {
-            specification = specification.and(lastNameContain(criteriaRequest.getLastName()));
-        }
-        return specification;
-    }
-
-    private Specification<AdminUserEntity> criteriaFirstNameContain(SearchAdminUserRequest criteriaRequest,
+    private Specification<AdminUserEntity> criteriaAdminNameContain(SearchAdminUserRequest criteriaRequest,
                                                                     Specification<AdminUserEntity> specification) {
-        if (criteriaRequest.getFirstName() != null) {
-            specification = specification.and(firstNameContain(criteriaRequest.getFirstName()));
-        }
-        return specification;
-    }
-
-    private Specification<AdminUserEntity> criteriaIdEqual(SearchAdminUserRequest criteriaRequest, Specification<AdminUserEntity> specification) {
-        if (criteriaRequest.getId() != null) {
-            specification = specification.and(idEqual(criteriaRequest.getId()));
+        if (criteriaRequest.getAdminName() != null && !criteriaRequest.getAdminName().isEmpty()) {
+            specification = specification.and(nameContain(criteriaRequest.getAdminName()));
         }
         return specification;
     }
 
     private Specification<AdminUserEntity> criteriaRoleEqual(SearchAdminUserRequest criteriaRequest,
                                                                       Specification<AdminUserEntity> specification) {
-        if (criteriaRequest.getRole() != null) {
+        if (criteriaRequest.getRole() != null && !criteriaRequest.getRole().isEmpty()) {
             specification = specification.and(roleEqual(criteriaRequest.getRole()));
         }
         return specification;
@@ -153,7 +143,7 @@ public class AdminUserService {
 
     private Specification<AdminUserEntity> criteriaModuleEqual(SearchAdminUserRequest criteriaRequest,
                                                                       Specification<AdminUserEntity> specification) {
-        if (criteriaRequest.getRole() != null) {
+        if (criteriaRequest.getRole() != null && !criteriaRequest.getModule().isEmpty() && !"ALL".equalsIgnoreCase(criteriaRequest.getModule())) {
             specification = specification.and(moduleEqual(criteriaRequest.getModule()));
         }
         return specification;
@@ -162,7 +152,7 @@ public class AdminUserService {
     private Specification<AdminUserEntity> criteriaActiveStatusEqual(SearchAdminUserRequest criteriaRequest,
                                                                Specification<AdminUserEntity> specification) {
         if (criteriaRequest.getRole() != null) {
-            specification = specification.and(activeStatusEqual(criteriaRequest.isActive()));
+            specification = specification.and(activeStatusEqual(criteriaRequest.getIsActive()));
         }
         return specification;
     }

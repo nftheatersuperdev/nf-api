@@ -10,8 +10,7 @@ public class AdminUserDto {
     private UUID id;
     private String firebaseId;
     private String email;
-    private String firstName;
-    private String lastName;
+    private String adminName;
     private String role;
     private String module;
     private Boolean isActive;
