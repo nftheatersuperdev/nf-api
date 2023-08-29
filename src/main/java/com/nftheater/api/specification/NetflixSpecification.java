@@ -4,8 +4,6 @@ import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.entity.*;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
@@ -34,8 +32,8 @@ public class NetflixSpecification {
         return (netflixAccountEntity, cq, cb) -> cb.equal(netflixAccountEntity.get(NetflixAccountEntity_.IS_ACTIVE), isActive);
     }
 
-    public static Specification<NetflixAccountEntity> accountNameContain(String accountName) {
-        return (netflixAccountEntity, cq, cb) -> cb.like(netflixAccountEntity.get(NetflixAccountEntity_.ACCOUNT_NAME), BusinessConstants.PERCENT_SIGN + accountName + BusinessConstants.PERCENT_SIGN);
+    public static Specification<NetflixAccountEntity> accountNameEqual(String accountName) {
+        return (netflixAccountEntity, cq, cb) -> cb.equal(netflixAccountEntity.get(NetflixAccountEntity_.ACCOUNT_NAME), accountName);
     }
 
     public static Specification<NetflixAccountEntity> customerStatusIn(List<String> customerStatus) {

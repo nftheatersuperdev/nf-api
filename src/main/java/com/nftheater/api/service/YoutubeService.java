@@ -2,7 +2,6 @@ package com.nftheater.api.service;
 
 import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
-import com.nftheater.api.controller.netflix.response.NetflixLinkUserResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
@@ -21,6 +20,7 @@ import com.nftheater.api.repository.YoutubeRepository;
 import com.nftheater.api.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -71,7 +71,7 @@ public class YoutubeService {
                 specification = specification.and(userIdContain(request.getUserId()));
             }
             if (!request.getAccountName().isBlank()) {
-                specification = specification.and(accountNameContain(request.getAccountName()));
+                specification = specification.and(accountNameEqual(BusinessConstants.YOUTUBE_PREFIX + "-" + request.getAccountName()));
             }
             if (request.getCustomerStatus().size() != 0) {
                 specification = specification.and(customerStatusIn(request.getCustomerStatus()));
@@ -109,7 +109,7 @@ public class YoutubeService {
         response.setYoutube(youtubeAccountResponse);
         return response;
     }
-    public CreateYoutubeAccountResponse createYoutubeAccount(CreateYoutubeAccountRequest createRequest) throws DataNotFoundException {
+    public CreateYoutubeAccountResponse createYoutubeAccount(CreateYoutubeAccountRequest createRequest) throws DataNotFoundException, InvalidRequestException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(createRequest.getCreatedBy());
         String adminUser = adminUserEntity.getAdminName();
 
@@ -120,7 +120,16 @@ public class YoutubeService {
         newYoutubeAccount.setAccountStatus("กำลังใช้งานอยู่");
         newYoutubeAccount.setCreatedBy(adminUser);
         newYoutubeAccount.setUpdatedBy(adminUser);
-        youtubeRepository.saveAndFlush(newYoutubeAccount);
+        try {
+            youtubeRepository.saveAndFlush(newYoutubeAccount);
+        } catch(DataIntegrityViolationException ex) {
+            log.error(ex.getMessage());
+            if (ex.getMessage().contains("duplicate key value violates unique constraint")) {
+                throw new InvalidRequestException(" " + newYoutubeAccount.getYoutubeEmail() + " ซ้ำกับบัญชีอื่นในระบบ");
+            }
+        } catch (Exception ex) {
+            throw new InvalidRequestException(" เกิดข้อผิดพลาดในระบบ กรุณาติดต่อผู้ดูแลระบบ");
+        }
 
         return new CreateYoutubeAccountResponse(newYoutubeAccount.getId(), newYoutubeAccount.getAccountName());
     }

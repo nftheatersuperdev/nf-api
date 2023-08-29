@@ -57,7 +57,7 @@ public class YoutubeController {
     @PostMapping("/v1/youtube")
     public GeneralResponse<CreateYoutubeAccountResponse> createYoutube(
             HttpServletRequest httpServletRequest,
-            @RequestBody CreateYoutubeAccountRequest request) throws DataNotFoundException {
+            @RequestBody CreateYoutubeAccountRequest request) throws DataNotFoundException, InvalidRequestException {
         log.info("Start Create Netflix account with request : {}", request);
         UUID adminId = UUID.fromString(httpServletRequest.getHeader("userId"));
         request.setCreatedBy(adminId);

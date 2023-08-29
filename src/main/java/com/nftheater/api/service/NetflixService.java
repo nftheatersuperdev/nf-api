@@ -2,7 +2,6 @@ package com.nftheater.api.service;
 
 import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.constant.NetflixAccountType;
-import com.nftheater.api.controller.customer.response.CustomerResponse;
 import com.nftheater.api.controller.customer.response.UpdateCustomerRequest;
 import com.nftheater.api.controller.netflix.request.*;
 import com.nftheater.api.controller.netflix.response.*;
@@ -19,6 +18,8 @@ import com.nftheater.api.repository.*;
 import com.nftheater.api.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -71,7 +72,7 @@ public class NetflixService {
                 specification = specification.and(userIdContain(request.getUserId()));
             }
             if (!request.getAccountName().isBlank()) {
-                specification = specification.and(accountNameContain(request.getAccountName()));
+                specification = specification.and(accountNameEqual(BusinessConstants.NETFLIX_PREFIX + "-" + request.getAccountName()));
             }
             if (request.getCustomerStatus().size() != 0) {
                 specification = specification.and(customerStatusIn(request.getCustomerStatus()));
@@ -112,7 +113,7 @@ public class NetflixService {
         return response;
     }
 
-    public CreateNetflixAccountResponse createNetflixAccount(CreateNetflixAccountRequest createNetflixAccountRequest) throws DataNotFoundException {
+    public CreateNetflixAccountResponse createNetflixAccount(CreateNetflixAccountRequest createNetflixAccountRequest) throws DataNotFoundException, InvalidRequestException {
         final AdminUserEntity adminUserEntity = adminUserService.getAdminUserEntityById(createNetflixAccountRequest.getCreatedBy());
 
         Long nextSeq = netflixRepository.getNetflixAccountNameSeq();
@@ -123,7 +124,16 @@ public class NetflixService {
         newNetflixAccount.setIsActive(true);
         newNetflixAccount.setCreatedBy(adminUser);
         newNetflixAccount.setUpdatedBy(adminUser);
-        netflixRepository.saveAndFlush(newNetflixAccount);
+        try {
+            netflixRepository.saveAndFlush(newNetflixAccount);
+        } catch(DataIntegrityViolationException ex) {
+            log.error(ex.getMessage());
+            if (ex.getMessage().contains("duplicate key value violates unique constraint")) {
+                throw new InvalidRequestException(" " + newNetflixAccount.getNetflixEmail() + " ซ้ำกับบัญชีอื่นในระบบ");
+            }
+        } catch (Exception ex) {
+            throw new InvalidRequestException(" เกิดข้อผิดพลาดในระบบ กรุณาติดต่อผู้ดูแลระบบ");
+        }
 
         return new CreateNetflixAccountResponse(newNetflixAccount.getId(), newNetflixAccount.getAccountName());
     }

@@ -22,7 +22,7 @@ public class NetflixAccountEntity {
     @Column(name = "change_date")
     private String changeDate;
 
-    @Column(name = "netflix_email")
+    @Column(name = "netflix_email", unique=true)
     private String netflixEmail;
 
     @Column(name = "netflix_password")

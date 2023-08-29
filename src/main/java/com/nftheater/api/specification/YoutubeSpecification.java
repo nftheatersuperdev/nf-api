@@ -29,8 +29,8 @@ public class YoutubeSpecification {
         return (youtubeAccountEntity, cq, cb) -> cb.in(youtubeAccountEntity.get(YoutubeAccountEntity_.ACCOUNT_STATUS)).value(status);
     }
 
-    public static Specification<YoutubeAccountEntity> accountNameContain(String accountName) {
-        return (youtubeAccountEntity, cq, cb) -> cb.like(youtubeAccountEntity.get(YoutubeAccountEntity_.ACCOUNT_NAME), BusinessConstants.PERCENT_SIGN + accountName + BusinessConstants.PERCENT_SIGN);
+    public static Specification<YoutubeAccountEntity> accountNameEqual(String accountName) {
+        return (youtubeAccountEntity, cq, cb) -> cb.equal(youtubeAccountEntity.get(YoutubeAccountEntity_.ACCOUNT_NAME), accountName);
     }
 
     public static Specification<YoutubeAccountEntity> customerStatusIn(List<String> customerStatus) {

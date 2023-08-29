@@ -46,7 +46,7 @@ public class NetflixController {
     @PostMapping("/v1/netflix")
     public GeneralResponse<CreateNetflixAccountResponse> createNetflix(
             HttpServletRequest httpServletRequest,
-            @RequestBody CreateNetflixAccountRequest request) throws DataNotFoundException {
+            @RequestBody CreateNetflixAccountRequest request) throws DataNotFoundException, InvalidRequestException {
         log.info("Start Create Netflix account with request : {}", request);
         UUID adminId = UUID.fromString(httpServletRequest.getHeader("userId"));
         request.setCreatedBy(adminId);
