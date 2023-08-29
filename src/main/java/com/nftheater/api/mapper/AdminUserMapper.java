@@ -18,7 +18,7 @@ public interface AdminUserMapper extends EntityMapper<AdminUserDto, AdminUserEnt
     AdminUserResponse toResponse(AdminUserEntity entity);
 
     @Mapping(source = "module", target = "account")
-    @Mapping(source = "role", target = "role", qualifiedByName = "mapRoleName")
+//    @Mapping(source = "role", target = "role", qualifiedByName = "mapRoleName")
     AdminUserResponse toResponse(AdminUserDto dto);
 
     AdminUserEntity toEntity(String firebaseId, CreateAdminUserRequest request, boolean isActive);
