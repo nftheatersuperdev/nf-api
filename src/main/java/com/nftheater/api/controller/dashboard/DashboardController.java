@@ -1,8 +1,8 @@
 package com.nftheater.api.controller.dashboard;
 
 import com.nftheater.api.constant.Module;
-import com.nftheater.api.controller.dashboard.response.NetflixDashboardResponse;
-import com.nftheater.api.controller.netflix.response.NetflixAccountResponse;
+import com.nftheater.api.controller.dashboard.response.netflix.NetflixDashboardResponse;
+import com.nftheater.api.controller.dashboard.response.youtube.YoutubeDashboardResponse;
 import com.nftheater.api.controller.response.GeneralResponse;
 import com.nftheater.api.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +25,13 @@ public class DashboardController {
     public GeneralResponse<NetflixDashboardResponse> getNetflixDashboard() {
         NetflixDashboardResponse dashboardResponse = dashboardService.getNetflixDashboardInfo();
         return new GeneralResponse<>(SUCCESS, dashboardResponse);
+    }
+
+    @Secured({Module.ALL, Module.YOUTUBE})
+    @GetMapping("/v1/dashboard/youtube")
+    public GeneralResponse<YoutubeDashboardResponse> getYoutubeDashboard() {
+        YoutubeDashboardResponse youtubeDashboardResponse = dashboardService.getYoutubeDashboardInfo();
+        return new GeneralResponse<>(SUCCESS, youtubeDashboardResponse);
     }
 
 }

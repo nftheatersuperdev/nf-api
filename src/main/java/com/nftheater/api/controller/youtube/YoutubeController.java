@@ -2,13 +2,11 @@ package com.nftheater.api.controller.youtube;
 
 import com.google.firebase.auth.FirebaseAuthException;
 import com.nftheater.api.constant.Module;
+import com.nftheater.api.controller.netflix.response.GetNetflixAccountResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.GeneralResponse;
 import com.nftheater.api.controller.youtube.request.*;
-import com.nftheater.api.controller.youtube.response.CreateYoutubeAccountResponse;
-import com.nftheater.api.controller.youtube.response.GetYoutubePackageResponse;
-import com.nftheater.api.controller.youtube.response.SearchYoutubeAccountResponse;
-import com.nftheater.api.controller.youtube.response.YoutubeAccountResponse;
+import com.nftheater.api.controller.youtube.response.*;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.exception.InvalidRequestException;
 import com.nftheater.api.service.AdminUserService;
@@ -64,6 +62,15 @@ public class YoutubeController {
         CreateYoutubeAccountResponse response = youtubeService.createYoutubeAccount(request);
         log.info("End Create Youtube account with account id : {}", response.getId());
         return new GeneralResponse<>(SUCCESS, response);
+    }
+
+    @Secured({Module.ALL, Module.YOUTUBE})
+    @GetMapping("/v1/youtubes")
+    public GeneralResponse<List<GetYoutubeAccountResponse>> getAllYoutubeAccount() {
+        log.info("Start all youtube account");
+        List<GetYoutubeAccountResponse> youtubeAccountResponses = youtubeService.getAllYoutubeAccount();
+        log.info("End all youtube account size : {}", youtubeAccountResponses.size());
+        return new GeneralResponse<>(SUCCESS, youtubeAccountResponses);
     }
 
     @Secured({Module.ALL, Module.YOUTUBE})

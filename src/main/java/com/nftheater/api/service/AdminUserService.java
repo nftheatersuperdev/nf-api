@@ -3,6 +3,7 @@ package com.nftheater.api.service;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.UserRecord;
+import com.nftheater.api.constant.RoleEnum;
 import com.nftheater.api.controller.adminuser.request.CreateAdminUserRequest;
 import com.nftheater.api.controller.adminuser.request.SearchAdminUserRequest;
 import com.nftheater.api.controller.adminuser.response.AdminUserResponse;
@@ -110,7 +111,12 @@ public class AdminUserService {
         PaginationResponse pagination = PaginationUtils.createPagination(adminUserDtoPage);
         SearchAdminUserResponse response = new SearchAdminUserResponse();
         response.setPagination(pagination);
-        response.setAdminUsers(adminUserMapper.mapDtoToResponses(adminUserDtoPage.getContent()));
+        List<AdminUserResponse> adminUserResponses = adminUserMapper.mapDtoToResponses(adminUserDtoPage.getContent());
+        for(AdminUserResponse admin : adminUserResponses){
+            String roleName = admin.getRole();
+            admin.setRole(RoleEnum.valueOf(roleName).getRoleNameTh());
+        }
+        response.setAdminUsers(adminUserResponses);
 
         log.info("Found {} customers with criteria.", adminUserDtoPage);
         return response;

@@ -1,4 +1,4 @@
-package com.nftheater.api.controller.dashboard.response;
+package com.nftheater.api.controller.dashboard.response.youtube;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class NetflixCustomerInfo {
+public class YoutubeCustomerInfo {
     private int countWaitingExpired;
     private int countWaitingAsk2Status;
     private int countWaitingAsk1Status;

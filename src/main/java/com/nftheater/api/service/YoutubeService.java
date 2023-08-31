@@ -251,7 +251,7 @@ public class YoutubeService {
         if (!status.isBlank() && status != null) {
             if ("ปิดการใช้งานชั่วคราว".equalsIgnoreCase(status)) {
                 List<YoutubeAccountLinkEntity> accountLink = youtubeAccountLinkRepository.findByAccountId(accountId);
-                if (accountLink.size() != 1) {
+                if (accountLink.size() > 0) {
                     throw new InvalidRequestException("ไม่สามารถปิดบัญชีชั่วคราวได้ เนื่องจากยังมีลูกค้าอยู่ในบัญชีนี้");
                 }
             }
@@ -308,5 +308,17 @@ public class YoutubeService {
             updateLinkUserYoutubeRequest.setExtendDay(0);
             linkUserToYoutubeAccount(toAccountId, updateLinkUserYoutubeRequest, adminId);
         }
+    }
+
+    public List<GetYoutubeAccountResponse> getAllYoutubeAccount() {
+        List<YoutubeAccountEntity> youtubeAccountDtos = youtubeRepository.findAll(Sort.by(YoutubeAccountEntity_.CREATED_DATE).ascending());
+        List<GetYoutubeAccountResponse> youtubeAccountResponses = new ArrayList<>();
+        for(YoutubeAccountEntity entity : youtubeAccountDtos) {
+            GetYoutubeAccountResponse resp = new GetYoutubeAccountResponse();
+            resp.setAccountId(entity.getId());
+            resp.setAccountName(entity.getAccountName());
+            youtubeAccountResponses.add(resp);
+        }
+        return youtubeAccountResponses;
     }
 }
