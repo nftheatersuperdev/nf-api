@@ -19,7 +19,6 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
 		<firebase.version>9.1.1</firebase.version>
-		<maven.plugin.validation>verbose</maven.plugin.validation>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -111,11 +110,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>com.heroku.sdk</groupId>
-				<artifactId>heroku-maven-plugin</artifactId>
-				<version>3.0.7</version>
 			</plugin>
 		</plugins>
 	</build>
