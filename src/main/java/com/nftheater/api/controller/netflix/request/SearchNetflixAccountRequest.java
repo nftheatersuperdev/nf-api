@@ -12,4 +12,7 @@ public class SearchNetflixAccountRequest {
     private String accountName;
     private Boolean isActive;
     private List<String> customerStatus = new ArrayList<>();
+    private Boolean filterTVAvailable;
+    private Boolean filterOtherAvailable;
+    private Boolean filterAdditionalAvailable;
 }

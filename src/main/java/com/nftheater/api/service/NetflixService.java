@@ -18,7 +18,6 @@ import com.nftheater.api.repository.*;
 import com.nftheater.api.utils.PaginationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -98,18 +97,37 @@ public class NetflixService {
             }
         );
 
+        List<NetflixAccountResponse> netflixResponse = new ArrayList<>();
+        boolean added = false;
         for (NetflixAccountResponse netflixAccount : netflixAccountResponse) {
+            added = false;
             fillEmptyNetflixUser(netflixAccount);
             netflixAccount.setAvailableDevice(generateAvailableDevice(netflixAccount.getUsers()));
             netflixAccount.setTotalAvailable(netflixAccount.getAvailableDevice().getAdditionalAvailable()
                     + netflixAccount.getAvailableDevice().getTvAvailable()
                     + netflixAccount.getAvailableDevice().getOtherAvailable());
+
+            if (request.getFilterTVAvailable() && netflixAccount.getAvailableDevice().getTvAvailable() > 0) {
+                added = true;
+            }
+
+            if (request.getFilterOtherAvailable() && netflixAccount.getAvailableDevice().getOtherAvailable() > 0) {
+                added = true;
+            }
+
+            if (request.getFilterAdditionalAvailable() && netflixAccount.getAvailableDevice().getAdditionalAvailable() > 0) {
+                added = true;
+            }
+
+            if (added) {
+                netflixResponse.add(netflixAccount);
+            }
         }
 
         // Sort
-        netflixAccountResponse.sort(Comparator.comparingInt(NetflixAccountResponse::getTotalAvailable).reversed());
+        netflixResponse.sort(Comparator.comparingInt(NetflixAccountResponse::getTotalAvailable).reversed());
 
-        response.setNetflix(netflixAccountResponse);
+        response.setNetflix(netflixResponse);
         return response;
     }
 
@@ -641,7 +659,7 @@ public class NetflixService {
                 .toList().size());
         resp.setAdditionalAvailable(users.stream()
                 .filter(u -> u.getAccountType().equals(NetflixAccountType.ADDITIONAL) &&
-                        (u.getAccountStatus().equalsIgnoreCase("ว่าง") || u.getAccountStatus().equalsIgnoreCase("ยังไม่เปิดจอเสริม"))
+                        (u.getAccountStatus().equalsIgnoreCase("ว่าง"))
                 ).toList().size());
         return resp;
     }
