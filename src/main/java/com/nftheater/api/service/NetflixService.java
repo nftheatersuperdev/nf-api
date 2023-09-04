@@ -602,14 +602,15 @@ public class NetflixService {
             if (countTvAccount == 0) {
                 linkTvUser.setAccountType(NetflixAccountType.TV);
                 linkTvUser.setAccountStatus(getAccountStatus(null));
+                linkTvUser.setColor("#008000");
                 linkTvUser.setSort(1);
             } else {
                 linkTvUser.setAccountType(NetflixAccountType.ADDITIONAL);
                 linkTvUser.setAccountStatus("ยังไม่เปิดจอเสริม");
+                linkTvUser.setColor("#000000");
                 linkTvUser.setSort(2);
             }
             linkTvUser.setUser(null);
-            linkTvUser.setColor("#008000");
             netflixAccount.getUsers().add(linkTvUser);
             countTvAccount++;
         }

@@ -16,7 +16,9 @@ public class BusinessUtils {
             return "#FF0000";
         }else if (acctStatus.contains("รอ")) {
             return "#FFC100";
-        } else {
+        }else if (acctStatus.equalsIgnoreCase("ยังไม่เปิดจอเสริม")) {
+            return "#000000";
+        }else {
             return "#008000";
         }
     }
