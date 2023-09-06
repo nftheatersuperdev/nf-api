@@ -11,6 +11,7 @@ public class CustomerDto {
     private UUID id;
     private String userId;
     private String password;
+    private String actualPassword;
     private String customerName;
     private String email;
     private String phoneNumber;

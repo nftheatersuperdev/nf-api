@@ -22,12 +22,19 @@ public class SecurityUtils {
             if (isBearer(bearerToken)) {
                 token = bearerToken.substring(7, bearerToken.length());
             }
+            else {
+                token = bearerToken.substring(17, bearerToken.length());
+            }
         }
         return token;
     }
 
     public boolean isBearer(String bearerToken) {
-        return StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ");
+        return StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ") && !bearerToken.contains("NFTheater");
+    }
+
+    public boolean isBearerNF(String bearerToken) {
+        return StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer NFTheater ");
     }
 
     public String getBearerToken(HttpServletRequest request) {

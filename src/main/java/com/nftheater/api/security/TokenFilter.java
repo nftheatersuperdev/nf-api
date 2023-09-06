@@ -6,6 +6,8 @@ import com.nftheater.api.constant.HeaderRequest;
 import com.nftheater.api.dto.AdminUserDto;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.service.AdminUserService;
+import com.nftheater.api.service.UserInfoService;
+import com.nftheater.api.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -31,15 +35,17 @@ import java.util.stream.Collectors;
 public class TokenFilter extends OncePerRequestFilter {
 
     private final SecurityUtils securityUtils;
+    private final JwtUtil jwtUtil;
     private final AdminUserService adminUserService;
+    private final UserInfoService userInfoService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String bearerToken = securityUtils.getBearerToken(request);
+        final String authorizeToken = securityUtils.getBearerToken(request);
         HeaderMapRequestWrapper requestWrapper = new HeaderMapRequestWrapper(request);
-        if (securityUtils.isBearer(bearerToken)) {
+        if (securityUtils.isBearer(authorizeToken)) {
             String idToken = securityUtils.getTokenFromRequest(request);
             AdminUserDto adminUserDto = null;
             try {
@@ -52,13 +58,22 @@ public class TokenFilter extends OncePerRequestFilter {
 
             if (adminUserDto != null) {
                 setHeader(requestWrapper, adminUserDto);
-                Set<GrantedAuthority> authorityList =  new HashSet<GrantedAuthority>();
+                Set<GrantedAuthority> authorityList = new HashSet<GrantedAuthority>();
                 authorityList.add(new SimpleGrantedAuthority(adminUserDto.getModule()));
                 Authentication authentication = new UsernamePasswordAuthenticationToken(adminUserDto, null, authorityList);
                 log.info("UsernamePasswordAuthenticationToken:" + authentication);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
                 log.info("Cannot find admin user with the request token");
+            }
+        } else if (securityUtils.isBearerNF(authorizeToken)) {
+            String customerToken = securityUtils.getTokenFromRequest(request);
+            String username = jwtUtil.extractUsername(customerToken);
+            UserDetails userDetails = userInfoService.loadUserByUsername(username);
+            if (jwtUtil.validateToken(customerToken, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
         filterChain.doFilter(requestWrapper, response);
