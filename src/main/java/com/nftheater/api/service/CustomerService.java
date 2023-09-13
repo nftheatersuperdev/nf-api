@@ -9,12 +9,11 @@ import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.dto.CustomerDto;
-import com.nftheater.api.entity.AdminUserEntity;
-import com.nftheater.api.entity.CustomerEntity;
-import com.nftheater.api.entity.CustomerEntity_;
+import com.nftheater.api.dto.NetflixAccountDto;
+import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.mapper.CustomerMapper;
-import com.nftheater.api.repository.CustomerRepository;
+import com.nftheater.api.repository.*;
 import com.nftheater.api.security.SecurityUtils;
 import com.nftheater.api.utils.JwtUtil;
 import com.nftheater.api.utils.PaginationUtils;
@@ -48,6 +47,11 @@ import static com.nftheater.api.specification.CustomerSpecification.*;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final NetflixAccountLinkRepository netflixAccountLinkRepository;
+    private final NetflixRepository netflixRepository;
+    private final NetflixAdditionalAccountLinkRepository netflixAdditionalAccountLinkRepository;
+    private final NetflixAdditionalAccountRepository netflixAdditionalAccountRepository;
+    private final YoutubeAccountLinkRepository youtubeAccountLinkRepository;
     private final CustomerMapper customerMapper;
     private final AdminUserService adminUserService;
     private final SystemConfigService systemConfigService;
@@ -102,6 +106,7 @@ public class CustomerService {
         customerDto.setUserId(generateUserId(createCustomerRequest.getAccount()));
         String generatedPassword = generatePassword();
         customerDto.setPassword(encoder.encode(generatedPassword));
+        customerDto.setActualPassword(generatedPassword);
         customerDto.setExpiredDate(ZonedDateTime.now());
         customerDto.setCustomerStatus("กำลังใช้งาน");
         CustomerEntity customerEntity = customerMapper.toEntity(customerDto);
@@ -202,7 +207,33 @@ public class CustomerService {
                 .orElseThrow(() -> new DataNotFoundException("Customer ID " + userDetails.getUsername() + " is not found."));
 
         CustomerDto customerDto = customerMapper.toDto(customerEntity);
-        return customerMapper.toCustomerProfileResponse(customerDto);
+        CustomerProfileResponse profileResponse = customerMapper.toCustomerProfileResponse(customerDto);
+        NetflixAccountLinkEntity netflixAccountLinkEntity = netflixAccountLinkRepository.findByUserId(customerEntity.getId())
+                .orElse(null);
+        if (netflixAccountLinkEntity != null) {
+            NetflixAccountEntity netflix = netflixRepository.findById(netflixAccountLinkEntity.getAccount().getId()).get();
+            profileResponse.setNetflixEmail(netflix.getNetflixEmail());
+            profileResponse.setNetflixPassword(netflix.getNetflixPassword());
+            profileResponse.setNetflixPackageName(netflixAccountLinkEntity.getPackageName());
+            profileResponse.setNetflixDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
+        }
+        NetflixAdditionalAccountLinkEntity additionalAccountLink = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId())
+                .orElse(null);
+        if (additionalAccountLink != null) {
+            NetflixAdditionalAccountEntity additionalAccount = netflixAdditionalAccountRepository.findById(additionalAccountLink.getId().getAdditionalAccountId()).get();
+            profileResponse.setNetflixEmail(additionalAccount.getAdditionalEmail());
+            profileResponse.setNetflixPassword(additionalAccount.getAdditionalPassword());
+            profileResponse.setNetflixPackageName(netflixAccountLinkEntity.getPackageName());
+            profileResponse.setNetflixDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
+        }
+        YoutubeAccountLinkEntity youtubeAccountLinkEntity = youtubeAccountLinkRepository.findByUserId(customerEntity.getId())
+                .orElse(null);
+        if (youtubeAccountLinkEntity != null) {
+            profileResponse.setYoutubePackageName(youtubeAccountLinkEntity.getPackageName());
+            profileResponse.setYoutubeDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
+        }
+
+        return profileResponse;
     }
 
     private String generateUserId(String account) {

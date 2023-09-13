@@ -30,4 +30,7 @@ public class YoutubeAccountLinkEntity {
 
     @Column(name = "added_by")
     private String addedBy;
+
+    @Column(name = "package_name")
+    private String packageName;
 }

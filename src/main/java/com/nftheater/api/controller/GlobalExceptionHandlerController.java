@@ -3,6 +3,7 @@ package com.nftheater.api.controller;
 import com.nftheater.api.constant.ErrorCode;
 import com.nftheater.api.constant.ResponseStatus;
 import com.nftheater.api.controller.response.GeneralResponse;
+import com.nftheater.api.exception.BadCredentialsException;
 import com.nftheater.api.exception.DataNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -64,6 +65,18 @@ public class GlobalExceptionHandlerController {
 
         final GeneralResponse<String> generalResponse = new GeneralResponse<>(ErrorCode.INVALID_REQUEST, null, errorMessage);
         return ResponseEntity.badRequest().body(generalResponse);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<GeneralResponse<String>> handleBadCredentialsException(BadCredentialsException e) {
+        String code = ResponseStatus.FAILED;
+
+        if (e.getCode() != null) {
+            code = e.getCode();
+        }
+
+        final GeneralResponse<String> generalResponse = new GeneralResponse<>(code, null, e.getMessage());
+        return new ResponseEntity<>(generalResponse, HttpStatus.UNAUTHORIZED);
     }
 
 }

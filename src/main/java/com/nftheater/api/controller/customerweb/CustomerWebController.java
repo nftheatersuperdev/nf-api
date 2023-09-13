@@ -5,6 +5,7 @@ import com.nftheater.api.controller.customerweb.request.AuthenticationRequest;
 import com.nftheater.api.controller.customerweb.response.AuthenticationResponse;
 import com.nftheater.api.controller.customerweb.response.CustomerProfileResponse;
 import com.nftheater.api.controller.response.GeneralResponse;
+import com.nftheater.api.exception.BadCredentialsException;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.service.CustomerService;
 import com.nftheater.api.utils.JwtUtil;
@@ -33,16 +34,20 @@ public class CustomerWebController {
 
     @PostMapping("/v1/customer-web/login")
     public GeneralResponse<AuthenticationResponse> loginCustomer(@RequestBody AuthenticationRequest authenticationRequest)
-            throws DataNotFoundException {
+            throws DataNotFoundException, BadCredentialsException {
         log.info("Customer login with {}", authenticationRequest);
-        Authentication authenticate = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
-        );
+        try{
+            Authentication authenticate = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
+            );
+        } catch (org.springframework.security.authentication.BadCredentialsException ex) {
+            throw new BadCredentialsException("รหัสลูกค้า และ/หรือ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
+        }
 
         UserDetails userDetails = customerService.loadUserByUserId(authenticationRequest.getUsername());
 
-        final String jwt = jwtUtil.generateToken(userDetails);
-        return new GeneralResponse<>(SUCCESS, new AuthenticationResponse(jwt));
+        final String token = jwtUtil.generateToken(userDetails);
+        return new GeneralResponse<>(SUCCESS, new AuthenticationResponse(token));
     }
 
     @GetMapping("/v1/customer-web/profile")

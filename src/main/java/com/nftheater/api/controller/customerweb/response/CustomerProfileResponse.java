@@ -15,6 +15,8 @@ public class CustomerProfileResponse {
     private ZonedDateTime expiredDate;
     private long netflixDayLeft;
     private String netflixPackageName;
+    private String netflixEmail;
+    private String netflixPassword;
     private String youtubePackageName;
     private long youtubeDayLeft;
     private int invitingPoint;

@@ -12,5 +12,6 @@ public interface NetflixPackageMapper extends EntityMapper<NetflixPackageDto, Ne
     @Mapping(source = "name", target = "packageName")
     @Mapping(source = "day", target = "packageDay")
     @Mapping(source = "price", target = "packagePrice")
+    @Mapping(source = "id", target = "packageId")
     GetNetflixPackageResponse toPackageResponse(NetflixPackageDto dto);
 }

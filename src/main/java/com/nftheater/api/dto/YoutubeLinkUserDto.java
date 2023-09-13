@@ -10,4 +10,5 @@ public class YoutubeLinkUserDto {
     private String accountType;
     private ZonedDateTime addedDate;
     private String addedBy;
+    private String packageName;
 }
