@@ -3,6 +3,7 @@ package com.nftheater.api.mapper;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.response.CustomerListResponse;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
+import com.nftheater.api.controller.customerweb.response.CustomerProfileResponse;
 import com.nftheater.api.dto.CustomerDto;
 import com.nftheater.api.entity.CustomerEntity;
 import org.mapstruct.Mapper;
@@ -20,11 +21,14 @@ public interface CustomerMapper extends EntityMapper<CustomerDto, CustomerEntity
 
     @Mapping(source = "customerStatus", target = "sort", qualifiedByName = "getCustomerStatusSort")
     @Mapping(source = "expiredDate", target = "dayLeft", qualifiedByName = "calculateDayLeft")
+    @Mapping(source = "actualPassword", target = "password")
     CustomerResponse toResponse(CustomerDto dto);
 
     List<CustomerResponse> mapDtoToResponses(List<CustomerDto> dtos);
 
     CustomerDto mapRequestToDto(CreateCustomerRequest request);
+
+    CustomerProfileResponse toCustomerProfileResponse(CustomerDto dto);
 
     @Named("getCustomerStatusSort")
     public static int getCustomerStatusSort(String status) {

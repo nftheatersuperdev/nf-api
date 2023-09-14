@@ -1,5 +1,6 @@
 package com.nftheater.api.dto;
 
+import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
@@ -10,4 +11,5 @@ public class NetflixLinkUserDto {
     private String accountType;
     private ZonedDateTime addedDate;
     private String addedBy;
+    private String packageName;
 }

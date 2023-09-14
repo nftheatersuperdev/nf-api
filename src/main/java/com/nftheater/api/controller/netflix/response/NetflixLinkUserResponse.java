@@ -17,4 +17,5 @@ public class NetflixLinkUserResponse {
     private String color;
     @JsonIgnore
     private int sort;
+    private String packageName;
 }

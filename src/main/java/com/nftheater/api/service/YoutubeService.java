@@ -189,6 +189,9 @@ public class YoutubeService {
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Youtube : " + accountId));
         final CustomerEntity customerEntity = customerService.getCustomerByUserId(updateLinkUserYoutubeRequest.getUserId());
 
+        final YoutubePackageEntity youtubePackage = youtubePackageRepository.findById(updateLinkUserYoutubeRequest.getPackageId())
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบแพ็คเก็ต"));
+
         // Validate
         final YoutubeAccountLinkEntity existingAccountLink = youtubeAccountLinkRepository
                 .findByUserId(customerEntity.getId())
@@ -216,11 +219,12 @@ public class YoutubeService {
         accountLinkEntity.setAddedBy(adminUser);
         accountLinkEntity.setAccount(youtubeAccountEntity);
         accountLinkEntity.setUser(customerEntity);
+        accountLinkEntity.setPackageName(youtubePackage.getName());
 
         youtubeAccountLinkRepository.save(accountLinkEntity);
 
         // Extend Customer day left.
-        long newDayLeft = customerService.extendDayForUser(customerEntity, updateLinkUserYoutubeRequest.getExtendDay(), adminUser);
+        long newDayLeft = customerService.extendDayForUser(customerEntity, youtubePackage.getDay(), adminUser);
     }
 
     public void removeUserFromYoutubeAccount(UUID accountId, String userId) throws DataNotFoundException {

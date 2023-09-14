@@ -230,6 +230,9 @@ public class NetflixService {
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบบัญชี Netflix : " + accountId));
         final CustomerEntity customerEntity = customerService.getCustomerByUserId(request.getUserId());
 
+        final NetflixPackageEntity netflixPackage = netflixPackageRepository.findById(request.getPackageId())
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบแพ็คเก็ต"));
+
         if(!isTransfer){
             // Validate Existing
             final NetflixAdditionalAccountLinkEntity existingAdditionalLink = netflixAdditionalAccountLinkRepository
@@ -286,6 +289,7 @@ public class NetflixService {
             addedEntity.setAddedDate(ZonedDateTime.now());
             addedEntity.setAddedBy(adminUser);
             addedEntity.setAdditionalAccount(netflixAdditionalAccountEntity);
+            addedEntity.setPackageName(netflixPackage.getName());
 
             netflixAdditionalAccountLinkRepository.save(addedEntity);
         } else if (NetflixAccountType.TV.name().equalsIgnoreCase(request.getAccountType())) {
@@ -317,6 +321,7 @@ public class NetflixService {
                     savedAccountLinkEntity.setAddedDate(ZonedDateTime.now());
                     savedAccountLinkEntity.setUser(customerEntity);
                     savedAccountLinkEntity.setAccount(netflixAccountEntity);
+                    savedAccountLinkEntity.setPackageName(netflixPackage.getName());
 
                     netflixAccountLinkRepository.save(savedAccountLinkEntity);
                 }
@@ -341,12 +346,13 @@ public class NetflixService {
             accountLinkEntity.setAddedDate(ZonedDateTime.now());
             accountLinkEntity.setUser(customerEntity);
             accountLinkEntity.setAccount(netflixAccountEntity);
+            accountLinkEntity.setPackageName(netflixPackage.getName());
 
             netflixAccountLinkRepository.save(accountLinkEntity);
         }
 
         // Extend Customer day left.
-        long newDayLeft = customerService.extendDayForUser(customerEntity, request.getExtendDay(), adminUser);
+        long newDayLeft = customerService.extendDayForUser(customerEntity, netflixPackage.getDay(), adminUser);
 
     }
 

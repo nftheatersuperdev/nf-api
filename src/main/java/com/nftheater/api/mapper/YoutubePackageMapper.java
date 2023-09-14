@@ -13,5 +13,6 @@ public interface YoutubePackageMapper extends EntityMapper<YoutubePackageDto, Yo
     @Mapping(source = "day", target = "packageDay")
     @Mapping(source = "price", target = "packagePrice")
     @Mapping(source = "type", target = "packageType")
+    @Mapping(source = "id", target = "packageId")
     GetYoutubePackageResponse toPackageResponse(YoutubePackageDto dto);
 }

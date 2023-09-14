@@ -6,6 +6,7 @@ public class ErrorCode {
         throw new IllegalStateException("Don't initialize this class");
     }
 
+    public static final String BAD_CREDENTIALS = "bad_credentials";
     public static final String BAD_REQUEST = "bad_request";
     public static final String DATA_NOT_FOUND = "data_not_found";
     public static final String DATA_DUPLICATE = "data_duplicate";

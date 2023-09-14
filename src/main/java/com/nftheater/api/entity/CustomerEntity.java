@@ -3,6 +3,7 @@ package com.nftheater.api.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.checkerframework.checker.units.qual.C;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -24,6 +25,10 @@ public class CustomerEntity {
     @NotNull
     @Column(name = "password", nullable = false, length = Integer.MAX_VALUE)
     private String password;
+
+    @NotNull
+    @Column(name = "actual_password", nullable = false, length = Integer.MAX_VALUE)
+    private String actualPassword;
 
     @Column(name = "customer_name", length = Integer.MAX_VALUE)
     private String customerName;

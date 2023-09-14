@@ -16,16 +16,6 @@ public class FirebaseConfiguration {
     @Bean
     @Primary
     public void firebaseInitialization() throws IOException {
-//        final byte[] decodedBytes = Base64.getDecoder().decode(encodedKey);
-//        final InputStream in = new ByteArrayInputStream(decodedBytes);
-//        final FirebaseOptions options = FirebaseOptions.builder()
-//                .setCredentials(GoogleCredentials.fromStream(in))
-//                .build();
-//        if (FirebaseApp.getApps().isEmpty()) {
-//            FirebaseApp.initializeApp(options);
-//        }
-//        FileInputStream serviceAccount =
-//                new FileInputStream("path/to/serviceAccountKey.json");
          InputStream serviceAccount = new ClassPathResource(
                 "/nft-admin-firebase-adminsdk.json").getInputStream();
         FirebaseOptions options = new FirebaseOptions.Builder()
