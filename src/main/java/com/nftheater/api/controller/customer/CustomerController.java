@@ -1,10 +1,10 @@
 package com.nftheater.api.controller.customer;
 
+import com.nftheater.api.controller.customer.request.CheckUrlRequest;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
 import com.nftheater.api.controller.customer.request.SearchCustomerRequest;
 import com.nftheater.api.controller.customer.response.*;
-import com.nftheater.api.controller.netflix.response.SearchNetflixAccountResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.GeneralResponse;
 import com.nftheater.api.exception.DataNotFoundException;
@@ -87,6 +87,15 @@ public class CustomerController {
         CustomerResponse response = customerService.updateCustomer(customerId, updateCustomerRequest, adminId);
         log.info("End update customer {}", customerId);
         return new GeneralResponse<>(SUCCESS, response);
+    }
+
+    @PostMapping("/v1/customer/line-url/isduplicate")
+    public GeneralResponse<Boolean> isUrlDuplicate(
+            @RequestBody @Valid CheckUrlRequest request) {
+        log.info("Start check line Url {}", request.getUrl());
+        Boolean isDup = customerService.isUrlDuplicate(request.getUrl());
+        log.info("End check Url {}", request.getUrl());
+        return new GeneralResponse<>(SUCCESS, isDup);
     }
 
 }

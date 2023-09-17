@@ -2,7 +2,6 @@ package com.nftheater.api.controller.youtube;
 
 import com.google.firebase.auth.FirebaseAuthException;
 import com.nftheater.api.constant.Module;
-import com.nftheater.api.controller.netflix.response.GetNetflixAccountResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.GeneralResponse;
 import com.nftheater.api.controller.youtube.request.*;

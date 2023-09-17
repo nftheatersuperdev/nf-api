@@ -1,6 +1,5 @@
 package com.nftheater.api.controller.request;
 
-import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 @Data

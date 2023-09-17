@@ -1,6 +1,5 @@
 package com.nftheater.api.mapper;
 
-import com.nftheater.api.constant.NetflixAccountType;
 import com.nftheater.api.controller.youtube.request.CreateYoutubeAccountRequest;
 import com.nftheater.api.controller.youtube.response.YoutubeAccountResponse;
 import com.nftheater.api.controller.youtube.response.YoutubeLinkUserResponse;

@@ -3,7 +3,6 @@ package com.nftheater.api.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.checkerframework.checker.units.qual.C;
 
 import java.time.ZonedDateTime;
 import java.util.List;

@@ -3,9 +3,6 @@ package com.nftheater.api.utils;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
 import lombok.experimental.UtilityClass;
 
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-
 @UtilityClass
 public class BusinessUtils {
 

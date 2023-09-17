@@ -1,7 +1,6 @@
 package com.nftheater.api.controller.youtube.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.nftheater.api.constant.NetflixAccountType;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
 import lombok.Data;
 

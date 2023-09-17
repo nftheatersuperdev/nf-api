@@ -1,6 +1,5 @@
 package com.nftheater.api.controller.customerweb;
 
-import com.nftheater.api.controller.customer.response.CustomerResponse;
 import com.nftheater.api.controller.customerweb.request.AuthenticationRequest;
 import com.nftheater.api.controller.customerweb.response.AuthenticationResponse;
 import com.nftheater.api.controller.customerweb.response.CustomerProfileResponse;

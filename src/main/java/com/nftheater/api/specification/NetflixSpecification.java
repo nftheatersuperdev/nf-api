@@ -8,8 +8,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
-import static com.nftheater.api.specification.JoinEntitySpecification.joinList;
-
 public class NetflixSpecification {
 
     private NetflixSpecification() {

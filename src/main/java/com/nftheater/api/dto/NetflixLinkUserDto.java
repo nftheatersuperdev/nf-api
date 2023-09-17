@@ -1,6 +1,5 @@
 package com.nftheater.api.dto;
 
-import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
