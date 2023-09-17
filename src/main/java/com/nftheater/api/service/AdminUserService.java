@@ -2,7 +2,6 @@ package com.nftheater.api.service;
 
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
-import com.google.firebase.auth.UserRecord;
 import com.nftheater.api.constant.RoleEnum;
 import com.nftheater.api.controller.adminuser.request.CreateAdminUserRequest;
 import com.nftheater.api.controller.adminuser.request.SearchAdminUserRequest;

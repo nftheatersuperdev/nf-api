@@ -15,6 +15,8 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
 
     Optional<CustomerEntity> findByUserId(String userId);
 
+    List<CustomerEntity> findByLineUrl(String lineUrl);
+
     List<CustomerEntity> findByAccount(String account);
 
     @Query(value = "SELECT nextval('user_id_seq')", nativeQuery = true)

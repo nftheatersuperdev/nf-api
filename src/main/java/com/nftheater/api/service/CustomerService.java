@@ -9,7 +9,6 @@ import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.dto.CustomerDto;
-import com.nftheater.api.dto.NetflixAccountDto;
 import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.mapper.CustomerMapper;
@@ -115,7 +114,7 @@ public class CustomerService {
         CreateCustomerResponse createCustomerResponse = new CreateCustomerResponse();
         createCustomerResponse.setId(customerEntity.getId());
         createCustomerResponse.setUserId(customerEntity.getUserId());
-        createCustomerResponse.setPassword(customerEntity.getPassword());
+        createCustomerResponse.setPassword(customerEntity.getActualPassword());
         return createCustomerResponse;
     }
     public List<CustomerListResponse> getCustomerList(String account) {
@@ -234,6 +233,14 @@ public class CustomerService {
         }
 
         return profileResponse;
+    }
+
+    public Boolean isUrlDuplicate(String url) {
+        List<CustomerEntity> customer = customerRepository.findByLineUrl(url).stream().toList();
+        if (customer.size() == 0) {
+            return false;
+        }
+        return true;
     }
 
     private String generateUserId(String account) {

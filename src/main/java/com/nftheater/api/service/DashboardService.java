@@ -33,7 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.nftheater.api.specification.NetflixSpecification.*;
+import static com.nftheater.api.specification.NetflixSpecification.isActiveEqual;
 
 @Slf4j
 @Service

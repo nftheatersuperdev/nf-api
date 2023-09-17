@@ -1,7 +1,7 @@
 package com.nftheater.api.specification;
 
-import com.nftheater.api.constant.BusinessConstants;
-import com.nftheater.api.entity.*;
+import com.nftheater.api.entity.YoutubeAccountEntity;
+import com.nftheater.api.entity.YoutubeAccountEntity_;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
