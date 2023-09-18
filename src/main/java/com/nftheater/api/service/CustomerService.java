@@ -236,11 +236,39 @@ public class CustomerService {
     }
 
     public Boolean isUrlDuplicate(String url) {
-        List<CustomerEntity> customer = customerRepository.findByLineUrl(url).stream().toList();
+        String uniqueUrl = url.substring(url.indexOf("/chat/"), url.length());
+        log.info("Substring URL : {}", uniqueUrl);
+        List<CustomerEntity> customer = customerRepository.findByLineUrl(uniqueUrl).stream().toList();
         if (customer.size() == 0) {
             return false;
         }
         return true;
+    }
+
+    public void deleteUserByUserId(String userId) throws DataNotFoundException {
+        log.info("Delete Customer with Id : {}", userId);
+        final CustomerEntity deltedCustomer = customerRepository.findByUserId(userId)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลลูคก้า"));
+        // Check Netflix Link
+        final NetflixAccountLinkEntity netflixLinkEntity = netflixAccountLinkRepository.findByUserId(deltedCustomer.getId()).orElse(null);
+        if (netflixLinkEntity != null) {
+            log.info("Unlink Netflix with {}", netflixLinkEntity.getId().getAccountId());
+            netflixAccountLinkRepository.delete(netflixLinkEntity);
+        }
+        // Check Netflix Additional Link
+        final NetflixAdditionalAccountLinkEntity additionalAccountLink = netflixAdditionalAccountLinkRepository.findByUserId(deltedCustomer.getId()).orElse(null);
+        if (additionalAccountLink != null) {
+            log.info("Unlink Addition account");
+            netflixAdditionalAccountLinkRepository.delete(additionalAccountLink);
+        }
+        // Check Youtube Link
+        final YoutubeAccountLinkEntity youtubeLink = youtubeAccountLinkRepository.findByUserId(deltedCustomer.getId()).orElse(null);
+        if (youtubeLink != null) {
+            log.info("Unlink Youtube with {}", youtubeLink.getId().getAccountId());
+            youtubeAccountLinkRepository.delete(youtubeLink);
+        }
+
+        customerRepository.delete(deltedCustomer);
     }
 
     private String generateUserId(String account) {

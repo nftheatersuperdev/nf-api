@@ -15,6 +15,7 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
 
     Optional<CustomerEntity> findByUserId(String userId);
 
+    @Query(nativeQuery = true, value = "SELECT c.* FROM customer c WHERE c.line_url like %:lineUrl%")
     List<CustomerEntity> findByLineUrl(String lineUrl);
 
     List<CustomerEntity> findByAccount(String account);

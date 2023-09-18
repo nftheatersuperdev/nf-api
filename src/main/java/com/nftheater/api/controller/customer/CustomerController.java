@@ -98,4 +98,12 @@ public class CustomerController {
         return new GeneralResponse<>(SUCCESS, isDup);
     }
 
+    @DeleteMapping("/v1/customer/{userId}")
+    public GeneralResponse<Void> deleteCustomer(@PathVariable("userId") String userId) throws DataNotFoundException {
+        log.info("Start delete customer {}", userId);
+        customerService.deleteUserByUserId(userId);
+        log.info("End delete customer {}", userId);
+        return new GeneralResponse<>(SUCCESS, null);
+    }
+
 }
