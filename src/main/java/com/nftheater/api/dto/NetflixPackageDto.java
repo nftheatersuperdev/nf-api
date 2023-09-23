@@ -10,4 +10,5 @@ public class NetflixPackageDto {
     private String name;
     private int day;
     private int price;
+    private String device;
 }

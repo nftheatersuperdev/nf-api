@@ -10,4 +10,5 @@ public class GetNetflixPackageResponse {
     private String packageName;
     private int packageDay;
     private int packagePrice;
+    private String device;
 }

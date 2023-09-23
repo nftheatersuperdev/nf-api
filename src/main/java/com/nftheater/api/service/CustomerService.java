@@ -4,14 +4,20 @@ import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
 import com.nftheater.api.controller.customer.request.SearchCustomerRequest;
 import com.nftheater.api.controller.customer.response.*;
-import com.nftheater.api.controller.customerweb.response.CustomerProfileResponse;
+import com.nftheater.api.controller.member.request.VerifyCustomerRequest;
+import com.nftheater.api.controller.member.response.CustomerProfileResponse;
+import com.nftheater.api.controller.netflix.response.GetNetflixPackageResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.dto.CustomerDto;
+import com.nftheater.api.dto.NetflixPackageDto;
+import com.nftheater.api.dto.RewardDto;
 import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
+import com.nftheater.api.exception.InvalidRequestException;
 import com.nftheater.api.mapper.CustomerMapper;
+import com.nftheater.api.mapper.NetflixPackageMapper;
 import com.nftheater.api.repository.*;
 import com.nftheater.api.security.SecurityUtils;
 import com.nftheater.api.utils.JwtUtil;
@@ -30,6 +36,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -50,14 +57,18 @@ public class CustomerService {
     private final NetflixRepository netflixRepository;
     private final NetflixAdditionalAccountLinkRepository netflixAdditionalAccountLinkRepository;
     private final NetflixAdditionalAccountRepository netflixAdditionalAccountRepository;
+    private final NetflixPackageRepository netflixPackageRepository;
     private final YoutubeAccountLinkRepository youtubeAccountLinkRepository;
+    private final YoutubePackageRepository youtubePackageRepository;
     private final CustomerMapper customerMapper;
     private final AdminUserService adminUserService;
     private final SystemConfigService systemConfigService;
+    private final RewardService rewardService;
     private final UserInfoService userInfoService;
     private final JwtUtil jwtUtil;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder encoder;
+    private final NetflixPackageMapper netflixPackageMapper;
 
     public SearchCustomerResponse searchCustomer(SearchCustomerRequest request, PageableRequest pageableRequest) {
         final Pageable pageable = PageRequest.of(
@@ -269,6 +280,88 @@ public class CustomerService {
         }
 
         customerRepository.delete(deltedCustomer);
+    }
+
+    public void verifyCustomer(HttpServletRequest httpServletRequest, VerifyCustomerRequest verifyCustomerRequest) throws DataNotFoundException, InvalidRequestException {
+        log.info("Verify customer");
+        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
+        String username = jwtUtil.extractUsername(customerToken);
+        UserDetails userDetails = userInfoService.loadUserByUsername(username);
+        log.info("Verify customer {} with {}",userDetails.getUsername(), verifyCustomerRequest);
+
+        final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
+                .orElseThrow(() -> new DataNotFoundException("Customer ID " + userDetails.getUsername() + " is not found."));
+
+        if ("ยืนยันสมาชิกแล้ว".equalsIgnoreCase(customerEntity.getVerifiedStatus())) {
+            throw new InvalidRequestException("ลูกค้าทำการยืนยันสมาชิกเรียบร้อยแล้ว");
+        }
+
+        customerEntity.setCustomerName(verifyCustomerRequest.getCustomerName());
+        customerEntity.setPhoneNumber(verifyCustomerRequest.getPhoneNumber());
+        customerEntity.setLineId(verifyCustomerRequest.getLineId());
+        customerEntity.setVerifiedStatus("ยืนยันสมาชิกแล้ว");
+
+        SystemConfigResponse memberCollectPoint = systemConfigService.getSystemConfigByConfigName("NEW_MEMBER_COLLECT_POINT");
+        int existingPoint = customerEntity.getMemberPoint();
+        customerEntity.setMemberPoint(existingPoint + Integer.valueOf(memberCollectPoint.getConfigValue()));
+
+        customerRepository.save(customerEntity);
+    }
+
+    @Transactional
+    public void redeemReward(HttpServletRequest httpServletRequest, UUID rewardId) throws DataNotFoundException, InvalidRequestException {
+        log.info("Redeem reward");
+        RewardDto rewardDto = rewardService.getRewardById(rewardId);
+        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
+        String username = jwtUtil.extractUsername(customerToken);
+        UserDetails userDetails = userInfoService.loadUserByUsername(username);
+        log.info("Redeem reward {} for customer {} ",rewardDto.getRewardName(), userDetails.getUsername());
+
+        final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลลูกต้า " + userDetails.getUsername()));
+
+        if (customerEntity.getMemberPoint() < rewardDto.getRedeemPoint()) {
+            throw new InvalidRequestException("คะแนนของคุณไม่เพียงพอสำหรับการแลกรางวัลนี้");
+        }
+
+        int existingPoint = customerEntity.getMemberPoint();
+        customerEntity.setMemberPoint(existingPoint - rewardDto.getRedeemPoint());
+        customerEntity.setExpiredDate(
+                customerEntity.getExpiredDate()
+                        .plusDays(Long.valueOf(rewardDto.getRewardValue())));
+
+        customerRepository.save(customerEntity);
+    }
+
+    public NetflixPackageDto getMemberCurrentNetflixPackage(HttpServletRequest httpServletRequest) throws DataNotFoundException, InvalidRequestException {
+        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
+        String username = jwtUtil.extractUsername(customerToken);
+        UserDetails userDetails = userInfoService.loadUserByUsername(username);
+        log.info("Get Netflix package of customer {} ", userDetails.getUsername());
+
+        final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลลูกต้า " + userDetails.getUsername()));
+
+        NetflixAccountLinkEntity netflixAccountLinkEntity = netflixAccountLinkRepository.findByUserId(customerEntity.getId())
+                .orElse(null);
+        NetflixAdditionalAccountLinkEntity additionalAccountLink = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId())
+                .orElse(null);
+
+        if (netflixAccountLinkEntity == null && additionalAccountLink == null) {
+            throw new InvalidRequestException("ลูกค้าไม่เคยสมัครแพ็คเกจ Netflix กรุณาติดต่อแอดมินเพื่อทำการสมัครแพ็คเกจ");
+        }
+        String packageName = "";
+        if (netflixAccountLinkEntity != null) {
+            packageName = netflixAccountLinkEntity.getPackageName();
+        } else {
+            packageName = additionalAccountLink.getPackageName();
+        }
+        log.info("Current package is {}", packageName);
+        String finalPackageName = packageName;
+        NetflixPackageDto packageDto = netflixPackageRepository.findByName(finalPackageName).map(netflixPackageMapper::toDto)
+                .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลแพ็คเกจ "+ finalPackageName +" กรุณาติดต่อแอดมิน"));
+
+        return packageDto;
     }
 
     private String generateUserId(String account) {

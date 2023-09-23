@@ -1,4 +1,4 @@
-package com.nftheater.api.controller.customerweb.request;
+package com.nftheater.api.controller.member.request;
 
 import lombok.Data;
 

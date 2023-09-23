@@ -1,4 +1,4 @@
-package com.nftheater.api.controller.customerweb.response;
+package com.nftheater.api.controller.member.response;
 
 import lombok.Data;
 
@@ -19,5 +19,5 @@ public class CustomerProfileResponse {
     private String netflixPassword;
     private String youtubePackageName;
     private long youtubeDayLeft;
-    private int invitingPoint;
+    private int memberPoint;
 }
