@@ -537,6 +537,7 @@ public class NetflixService {
 
         NetflixAdditionalAccountEntity savedEntity = additionalAccountEntity;
         savedEntity.setUpdatedBy(adminUser);
+        savedEntity.setAdditionalEmail(request.getEmail());
         savedEntity.setAdditionalPassword(request.getPassword());
 
         savedEntity = netflixAdditionalAccountRepository.save(savedEntity);
@@ -566,20 +567,31 @@ public class NetflixService {
         for(CustomerEntity customerEntity : customerEntities) {
             // Remove user
             String accountType = "";
+            String packageName = "";
+            String device = "";
             if (customerEntity.getNetflixAdditionalAccountLinks().size() == 0) {
                 accountType = customerEntity.getNetflixAccountLinks().get(0).getAccountType();
+                packageName = customerEntity.getNetflixAccountLinks().get(0).getPackageName();
+                device = accountType;
                 removeUserFromNetflixAccount(transferUserRequest.getFromAccountId(), customerEntity.getUserId());
             } else {
                 accountType = "ADDITIONAL";
                 NetflixAdditionalAccountLinkEntity additionalEntity = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId()).get();
                 UUID additionalId = additionalEntity.getAdditionalAccount().getId();
+                packageName = additionalEntity.getPackageName();
+                device = "TV";
                 removeUserFromAdditionalNetflixAccount(transferUserRequest.getFromAccountId(),additionalId, customerEntity.getUserId());
             }
+            // Get Package ID
+            NetflixPackageDto packageDto = netflixPackageRepository.findByNameAndDevice(packageName, device).map(netflixPackageMapper::toDto)
+                    .orElse(new NetflixPackageDto());
+
             // Link to new Account
             UpdateLinkUserNetflixRequest updateLinkUserNetflixRequest = new UpdateLinkUserNetflixRequest();
             updateLinkUserNetflixRequest.setAccountType(accountType);
             updateLinkUserNetflixRequest.setUserId(customerEntity.getUserId());
             updateLinkUserNetflixRequest.setExtendDay(0);
+            updateLinkUserNetflixRequest.setPackageId(packageDto.getId());
             linkUserToNetflixAccount(toAccountId, updateLinkUserNetflixRequest, adminId, true);
         }
         

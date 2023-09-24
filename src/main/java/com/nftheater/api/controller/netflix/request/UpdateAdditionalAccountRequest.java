@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class UpdateAdditionalAccountRequest {
+    private String email;
     private String password;
 }
