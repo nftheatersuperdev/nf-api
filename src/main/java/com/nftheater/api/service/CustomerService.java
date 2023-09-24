@@ -351,14 +351,17 @@ public class CustomerService {
             throw new InvalidRequestException("ลูกค้าไม่เคยสมัครแพ็คเกจ Netflix กรุณาติดต่อแอดมินเพื่อทำการสมัครแพ็คเกจ");
         }
         String packageName = "";
+        String device = "";
         if (netflixAccountLinkEntity != null) {
             packageName = netflixAccountLinkEntity.getPackageName();
+            device = netflixAccountLinkEntity.getAccountType();
         } else {
             packageName = additionalAccountLink.getPackageName();
+            device = "TV";
         }
         log.info("Current package is {}", packageName);
         String finalPackageName = packageName;
-        NetflixPackageDto packageDto = netflixPackageRepository.findByName(finalPackageName).map(netflixPackageMapper::toDto)
+        NetflixPackageDto packageDto = netflixPackageRepository.findByNameAndDevice(finalPackageName, device).map(netflixPackageMapper::toDto)
                 .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลแพ็คเกจ "+ finalPackageName +" กรุณาติดต่อแอดมิน"));
 
         return packageDto;

@@ -12,5 +12,5 @@ import java.util.UUID;
 public interface NetflixPackageRepository extends JpaRepository<NetflixPackageEntity, UUID> {
 
     List<NetflixPackageEntity> findByDevice(String device);
-    Optional<NetflixPackageEntity> findByName(String name);
+    Optional<NetflixPackageEntity> findByNameAndDevice(String name, String device);
 }
