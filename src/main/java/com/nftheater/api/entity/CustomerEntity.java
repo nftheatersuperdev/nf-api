@@ -72,6 +72,9 @@ public class CustomerEntity {
     @Column(name = "account")
     private String account;
 
+    @Column(name = "member_point")
+    private Integer memberPoint;
+
     @OneToMany(mappedBy = "user")
     private List<NetflixAdditionalAccountLinkEntity> netflixAdditionalAccountLinks;
 

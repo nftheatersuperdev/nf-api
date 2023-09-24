@@ -1,4 +1,4 @@
-package com.nftheater.api.controller.customerweb.response;
+package com.nftheater.api.controller.member.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

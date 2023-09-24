@@ -2,7 +2,7 @@ package com.nftheater.api.mapper;
 
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
-import com.nftheater.api.controller.customerweb.response.CustomerProfileResponse;
+import com.nftheater.api.controller.member.response.CustomerProfileResponse;
 import com.nftheater.api.dto.CustomerDto;
 import com.nftheater.api.entity.CustomerEntity;
 import org.mapstruct.Mapper;

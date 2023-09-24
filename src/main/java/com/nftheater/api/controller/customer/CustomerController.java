@@ -105,5 +105,4 @@ public class CustomerController {
         log.info("End delete customer {}", userId);
         return new GeneralResponse<>(SUCCESS, null);
     }
-
 }
