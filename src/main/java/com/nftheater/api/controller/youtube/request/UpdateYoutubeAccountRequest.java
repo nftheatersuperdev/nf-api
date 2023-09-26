@@ -6,5 +6,6 @@ import lombok.Data;
 public class UpdateYoutubeAccountRequest {
 
     private String changeDate;
+    private String billDate;
     private String password;
 }

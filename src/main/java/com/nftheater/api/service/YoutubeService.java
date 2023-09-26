@@ -281,6 +281,9 @@ public class YoutubeService {
         if (request.getChangeDate() != null && !request.getChangeDate().isEmpty()) {
             youtubeAccountEntity.setChangeDate(request.getChangeDate());
         }
+        if (request.getBillDate() != null && !request.getBillDate().isEmpty()) {
+            youtubeAccountEntity.setBillDate(request.getBillDate());
+        }
         YoutubeAccountResponse response = youtubeMapper.toResponse(youtubeMapper.toDto(youtubeAccountEntity));
         return response;
     }

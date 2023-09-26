@@ -7,6 +7,7 @@ import java.util.UUID;
 @Data
 public class CreateYoutubeAccountRequest {
     private String changeDate;
+    private String billDate;
     private String email;
     private String password;
     private UUID createdBy;

@@ -494,6 +494,7 @@ public class NetflixService {
         NetflixAccountEntity savedfNetflixAccountEntity = netflixAccountEntity;
         savedfNetflixAccountEntity.setNetflixPassword(request.getPassword());
         savedfNetflixAccountEntity.setChangeDate(request.getChangeDate());
+        savedfNetflixAccountEntity.setBillDate(request.getBillDate());
         savedfNetflixAccountEntity.setUpdatedBy(adminUser);
 
         savedfNetflixAccountEntity = netflixRepository.save(savedfNetflixAccountEntity);
