@@ -74,6 +74,9 @@ public class NetflixService {
             if (!request.getChangeDate().equalsIgnoreCase("-")) {
                 specification = specification.and(changeDateEqual(request.getChangeDate()));
             }
+            if (!request.getBillDate().equalsIgnoreCase("-")) {
+                specification = specification.and(billDateEqual(request.getBillDate()));
+            }
             if (!request.getUserId().isBlank() ) {
                 specification = specification.and(userIdContain(request.getUserId()));
             }

@@ -22,6 +22,9 @@ public class NetflixAccountEntity {
     @Column(name = "change_date")
     private String changeDate;
 
+    @Column(name = "bill_date")
+    private String billDate;
+
     @Column(name = "netflix_email", unique=true)
     private String netflixEmail;
 

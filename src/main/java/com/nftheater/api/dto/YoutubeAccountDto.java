@@ -12,6 +12,7 @@ public class YoutubeAccountDto {
     private UUID id;
     private String accountName;
     private String changeDate;
+    private String billDate;
     private String youtubeEmail;
     private String youtubePassword;
     private String accountStatus;

@@ -9,6 +9,7 @@ import java.util.List;
 public class SearchYoutubeAccountRequest {
     private String userId;
     private String changeDate;
+    private String billDate;
     private String accountName;
     private List<String> accountStatus = new ArrayList<>();
     private List<String> customerStatus = new ArrayList<>();

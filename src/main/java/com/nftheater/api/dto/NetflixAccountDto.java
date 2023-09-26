@@ -12,6 +12,7 @@ public class NetflixAccountDto {
     private UUID id;
     private String accountName;
     private String changeDate;
+    private String billDate;
     private String netflixEmail;
     private String netflixPassword;
     private Boolean isActive;

@@ -18,6 +18,10 @@ public class NetflixSpecification {
         return (root, cq, cb) -> cb.equal(root.get(NetflixAccountEntity_.CHANGE_DATE), changeDate);
     }
 
+    public static Specification<NetflixAccountEntity> billDateEqual(String billDate) {
+        return (root, cq, cb) -> cb.equal(root.get(NetflixAccountEntity_.BILL_DATE), billDate);
+    }
+
     public static Specification<NetflixAccountEntity> userIdContain(String userId) {
         return (netflixAccountEntity, cq, cb) -> {
                 Join<NetflixAccountEntity, NetflixAccountLinkEntity> accountJoinAccountLink = netflixAccountEntity.join(NetflixAccountEntity_.ACCOUNT_LINKS, JoinType.INNER);
