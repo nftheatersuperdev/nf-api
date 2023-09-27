@@ -29,6 +29,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -329,5 +330,19 @@ public class YoutubeService {
             youtubeAccountResponses.add(resp);
         }
         return youtubeAccountResponses;
+    }
+
+    public Integer getTransactionToday() {
+        ZonedDateTime today = ZonedDateTime.now();
+        ZonedDateTime sod = today.toLocalDate().atStartOfDay(today.getZone());
+        ZonedDateTime eod = today.with(LocalTime.of(23, 59, 59));
+        log.info("Get Transaction between {} and {}", sod, eod);
+
+        Specification<YoutubeAccountLinkEntity> specification = Specification.where(null);
+        specification = specification.and(overlapAddedDate(sod, eod));
+        List<YoutubeAccountLinkEntity> youtubeAccountLinkEntity = youtubeAccountLinkRepository.findAll(specification);
+        log.info("Transaction youtube : {}", youtubeAccountLinkEntity.size());
+
+        return youtubeAccountLinkEntity.size();
     }
 }

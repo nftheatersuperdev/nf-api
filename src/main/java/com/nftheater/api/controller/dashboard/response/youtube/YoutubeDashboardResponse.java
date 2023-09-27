@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class YoutubeDashboardResponse {
     private YoutubeChangeDateInfo changeDateInfo;
     private YoutubeCustomerInfo customerInfo;
+    private Integer todayTransaction;
 }

@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public class YoutubeSpecification {
@@ -44,5 +45,13 @@ public class YoutubeSpecification {
             Join<YoutubeAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(YoutubeAccountLinkEntity_.USER, JoinType.INNER);
             return cb.in(accountLinkJoinCustomer.get(CustomerEntity_.CUSTOMER_STATUS)).value(customerStatus);
         };
+    }
+
+    public static Specification<YoutubeAccountLinkEntity> overlapAddedDate(ZonedDateTime startDate, ZonedDateTime endDate) {
+        return (root, cq, cb) ->
+                cb.and(
+                        cb.lessThanOrEqualTo(root.get(YoutubeAccountLinkEntity_.ADDED_DATE), endDate),
+                        cb.greaterThanOrEqualTo(root.get(YoutubeAccountLinkEntity_.ADDED_DATE), startDate)
+                );
     }
 }

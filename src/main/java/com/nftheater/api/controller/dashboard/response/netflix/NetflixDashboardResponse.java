@@ -11,4 +11,5 @@ public class NetflixDashboardResponse {
     private NetflixChangeDateInfo changeDateInfo;
     private NetflixCustomerInfo customerInfo;
     private NetflixDeviceInfo deviceInfo;
+    private Integer todayTransaction;
 }
