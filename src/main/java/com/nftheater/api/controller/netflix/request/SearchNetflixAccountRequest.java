@@ -9,6 +9,7 @@ import java.util.List;
 public class SearchNetflixAccountRequest {
     private String userId;
     private String changeDate;
+    private String billDate;
     private String accountName;
     private Boolean isActive;
     private List<String> customerStatus = new ArrayList<>();

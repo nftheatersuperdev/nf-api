@@ -31,6 +31,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -73,6 +74,9 @@ public class NetflixService {
         if (request != null) {
             if (!request.getChangeDate().equalsIgnoreCase("-")) {
                 specification = specification.and(changeDateEqual(request.getChangeDate()));
+            }
+            if (!request.getBillDate().equalsIgnoreCase("-")) {
+                specification = specification.and(billDateEqual(request.getBillDate()));
             }
             if (!request.getUserId().isBlank() ) {
                 specification = specification.and(userIdContain(request.getUserId()));
@@ -491,6 +495,7 @@ public class NetflixService {
         NetflixAccountEntity savedfNetflixAccountEntity = netflixAccountEntity;
         savedfNetflixAccountEntity.setNetflixPassword(request.getPassword());
         savedfNetflixAccountEntity.setChangeDate(request.getChangeDate());
+        savedfNetflixAccountEntity.setBillDate(request.getBillDate());
         savedfNetflixAccountEntity.setUpdatedBy(adminUser);
 
         savedfNetflixAccountEntity = netflixRepository.save(savedfNetflixAccountEntity);
@@ -606,6 +611,25 @@ public class NetflixService {
                 .map(netflixPackageMapper::toPackageResponse)
                 .toList();
         return allPackageResponse;
+    }
+
+    public Integer getTransactionToday() {
+        ZonedDateTime today = ZonedDateTime.now();
+        ZonedDateTime sod = today.toLocalDate().atStartOfDay(today.getZone());
+        ZonedDateTime eod = today.with(LocalTime.of(23, 59, 59));
+        log.info("Get Transaction between {} and {}", sod, eod);
+
+        Specification<NetflixAccountLinkEntity> specification = Specification.where(null);
+        specification = specification.and(overlapAddedDate(sod, eod));
+        List<NetflixAccountLinkEntity> netflixAccountLinkEntity = netflixAccountLinkRepository.findAll(specification);
+        log.info("Transaction of TV and Other : {}", netflixAccountLinkEntity.size());
+
+        Specification<NetflixLinkAdditionalEntity> specification1 = Specification.where(null);
+        specification1 = specification1.and(overlapAdditionalAddedDate(sod, eod));
+        List<NetflixLinkAdditionalEntity> additionalLinkEntity = netflixLinkAdditionalRepository.findAll(specification1);
+        log.info("Transaction of Additional Screen : {}", additionalLinkEntity.size());
+
+        return netflixAccountLinkEntity.size() + additionalLinkEntity.size();
     }
 
     public void fillEmptyNetflixUser(NetflixAccountResponse netflixAccount) {

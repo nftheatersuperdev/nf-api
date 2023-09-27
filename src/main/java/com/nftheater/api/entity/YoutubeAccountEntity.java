@@ -23,6 +23,9 @@ public class YoutubeAccountEntity {
     @Column(name = "change_date")
     private String changeDate;
 
+    @Column(name = "bill_date")
+    private String billDate;
+
     @Column(name = "youtube_email")
     private String youtubeEmail;
 

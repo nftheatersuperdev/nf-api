@@ -50,18 +50,17 @@ public class DashboardService {
     private final YoutubeService youtubeService;
 
     @Transactional
-    public NetflixDashboardResponse getNetflixDashboardInfo(){
+    public NetflixDashboardResponse getNetflixDashboardInfo(String filterDate){
         Specification<NetflixAccountEntity> specification = Specification.where(null);
         specification = specification.and(isActiveEqual(true));
 
-        List<NetflixAccountEntity> netflixAccountEntity = netflixRepository.findAll(specification);
         List<NetflixAdditionalAccountEntity> netflixAdditionalAccountEntities = netflixAdditionalAccountRepository.findAll();
-        List<NetflixAccountDto> netflixAccountDtoList = netflixAccountEntity.stream().map(netflixAccountMapper::toDto).collect(Collectors.toList());
+        List<NetflixAccountDto> netflixAccountDtoList =netflixRepository.findAll(specification).stream().map(netflixAccountMapper::toDto).collect(Collectors.toList());
         List<NetflixAccountResponse> netflixAccountResponse = netflixAccountMapper.mapDtoToResponses(netflixAccountDtoList);
 
         log.info("Get Change Date Account");
         int totalAccount = 0;
-        totalAccount = netflixAccountEntity.size();
+        totalAccount = netflixAccountDtoList.size();
 
         Date now = new Date();
         DateFormat df = new SimpleDateFormat("dd/MM");
@@ -105,6 +104,11 @@ public class DashboardService {
 
         for (NetflixAccountResponse netflixAccount : netflixAccountResponse) {
             netflixService.fillEmptyNetflixUser(netflixAccount);
+        }
+
+        if (!filterDate.equalsIgnoreCase("all")) {
+            log.info("Get Netflix information for {}", filterDate);
+            netflixAccountResponse = netflixAccountResponse.stream().filter(acct -> acct.getChangeDate().equalsIgnoreCase(filterDate)).toList();
         }
 
         log.info("Get Customer & Device");
@@ -186,11 +190,12 @@ public class DashboardService {
         response.setChangeDateInfo(changeDateInfo);
         response.setCustomerInfo(customerInfo);
         response.setDeviceInfo(deviceInfo);
+        response.setTodayTransaction(netflixService.getTransactionToday());
         return response;
     }
 
     @Transactional
-    public YoutubeDashboardResponse getYoutubeDashboardInfo(){
+    public YoutubeDashboardResponse getYoutubeDashboardInfo(String filterDate){
         Specification<YoutubeAccountEntity> specification = Specification.where(null);
 
         List<YoutubeAccountEntity> youtubeAccountEntity = youtubeRepository.findAll(specification);
@@ -245,6 +250,11 @@ public class DashboardService {
             youtubeService.fillEmptyYoutubeUser(youtubeAccount);
         }
 
+        if (!filterDate.equalsIgnoreCase("all")) {
+            log.info("Get Youtube information for {}", filterDate);
+            youtubeAccountResponses = youtubeAccountResponses.stream().filter(acct -> acct.getChangeDate().equalsIgnoreCase(filterDate)).toList();
+        }
+
         log.info("Get Customer");
         int totalCustomer = 0, waitingExpired = 0, waitingAsk2 = 0, waitingAsk1 = 0, waitingAsk = 0, totalActive = 0, totalAvailable = 0;
 
@@ -295,6 +305,7 @@ public class DashboardService {
         YoutubeDashboardResponse response = new YoutubeDashboardResponse();
         response.setChangeDateInfo(changeDateInfo);
         response.setCustomerInfo(customerInfo);
+        response.setTodayTransaction(youtubeService.getTransactionToday());
 
         return response;
     }

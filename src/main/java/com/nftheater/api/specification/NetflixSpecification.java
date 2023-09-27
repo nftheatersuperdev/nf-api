@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public class NetflixSpecification {
@@ -16,6 +17,10 @@ public class NetflixSpecification {
 
     public static Specification<NetflixAccountEntity> changeDateEqual(String changeDate) {
         return (root, cq, cb) -> cb.equal(root.get(NetflixAccountEntity_.CHANGE_DATE), changeDate);
+    }
+
+    public static Specification<NetflixAccountEntity> billDateEqual(String billDate) {
+        return (root, cq, cb) -> cb.equal(root.get(NetflixAccountEntity_.BILL_DATE), billDate);
     }
 
     public static Specification<NetflixAccountEntity> userIdContain(String userId) {
@@ -40,6 +45,22 @@ public class NetflixSpecification {
             Join<NetflixAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(NetflixAccountLinkEntity_.USER, JoinType.INNER);
             return cb.in(accountLinkJoinCustomer.get(CustomerEntity_.CUSTOMER_STATUS)).value(customerStatus);
         };
+    }
+
+    public static Specification<NetflixAccountLinkEntity> overlapAddedDate(ZonedDateTime startDate, ZonedDateTime endDate) {
+        return (netflixAccountLinkEntity, cq, cb) ->
+                cb.and(
+                        cb.lessThanOrEqualTo(netflixAccountLinkEntity.get(NetflixAccountLinkEntity_.ADDED_DATE), endDate),
+                        cb.greaterThanOrEqualTo(netflixAccountLinkEntity.get(NetflixAccountLinkEntity_.ADDED_DATE), startDate)
+                );
+    }
+
+    public static Specification<NetflixLinkAdditionalEntity> overlapAdditionalAddedDate(ZonedDateTime startDate, ZonedDateTime endDate) {
+        return (root, cq, cb) ->
+                cb.and(
+                        cb.lessThanOrEqualTo(root.get(NetflixLinkAdditionalEntity_.ADDED_DATE), endDate),
+                        cb.greaterThanOrEqualTo(root.get(NetflixLinkAdditionalEntity_.ADDED_DATE), startDate)
+                );
     }
 }
 

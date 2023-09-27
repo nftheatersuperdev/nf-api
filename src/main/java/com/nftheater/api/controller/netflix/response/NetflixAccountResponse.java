@@ -12,6 +12,7 @@ public class NetflixAccountResponse {
     private UUID accountId;
     private String accountName;
     private String changeDate;
+    private String billDate;
     private String email;
     private String password;
     private Boolean isActive;

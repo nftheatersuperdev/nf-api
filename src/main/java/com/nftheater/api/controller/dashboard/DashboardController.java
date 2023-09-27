@@ -22,15 +22,15 @@ public class DashboardController {
 
     @Secured({Module.ALL, Module.NETFLIX})
     @GetMapping("/v1/dashboard/netflix")
-    public GeneralResponse<NetflixDashboardResponse> getNetflixDashboard() {
-        NetflixDashboardResponse dashboardResponse = dashboardService.getNetflixDashboardInfo();
+    public GeneralResponse<NetflixDashboardResponse> getNetflixDashboard(String filterDate) {
+        NetflixDashboardResponse dashboardResponse = dashboardService.getNetflixDashboardInfo(filterDate);
         return new GeneralResponse<>(SUCCESS, dashboardResponse);
     }
 
     @Secured({Module.ALL, Module.YOUTUBE})
     @GetMapping("/v1/dashboard/youtube")
-    public GeneralResponse<YoutubeDashboardResponse> getYoutubeDashboard() {
-        YoutubeDashboardResponse youtubeDashboardResponse = dashboardService.getYoutubeDashboardInfo();
+    public GeneralResponse<YoutubeDashboardResponse> getYoutubeDashboard(String filterDate) {
+        YoutubeDashboardResponse youtubeDashboardResponse = dashboardService.getYoutubeDashboardInfo(filterDate);
         return new GeneralResponse<>(SUCCESS, youtubeDashboardResponse);
     }
 
