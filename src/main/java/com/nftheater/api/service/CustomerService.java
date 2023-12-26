@@ -1,6 +1,7 @@
 package com.nftheater.api.service;
 
 import com.nftheater.api.config.BusinessConfiguration;
+import com.nftheater.api.constant.SystemConfigName;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
 import com.nftheater.api.controller.customer.request.SearchCustomerRequest;
@@ -201,7 +202,7 @@ public class CustomerService {
     }
 
     public String getNextStatusForCustomer(String currentStatus) throws DataNotFoundException {
-        SystemConfigResponse statusFlowValues = systemConfigService.getSystemConfigByConfigName("CUSTOMER_STATUS_FLOW");
+        SystemConfigResponse statusFlowValues = systemConfigService.getSystemConfigByConfigName(SystemConfigName.CUSTOMER_STATUS_FLOW);
         List<String> statusFlow = Arrays.stream(statusFlowValues.getConfigValue().split(",")).toList();
         int indexOfCurrentStatus = statusFlow.indexOf(currentStatus);
         if (indexOfCurrentStatus != -1 && indexOfCurrentStatus+1 != statusFlow.size()) {
@@ -325,10 +326,17 @@ public class CustomerService {
             throw new InvalidRequestException("Cannot verify Otp for verified mobile no.");
         }
 
-//        VerifyOtpClientResponse isVerified = smsService.verifyOtp(requestOtp.getRequestToken(), verifyOtpRequest.getPinCode());
-        VerifyOtpClientResponse isVerified = new VerifyOtpClientResponse();
-        isVerified.setStatus("success");
-        isVerified.setMessage("verified");
+        VerifyOtpClientResponse isVerified;
+        boolean isEnableRequestOTP = Boolean.getBoolean(systemConfigService.getSystemConfigByConfigName(SystemConfigName.ENABLE_REQUEST_OTP).getConfigValue());
+
+        if (isEnableRequestOTP) {
+            isVerified = smsService.verifyOtp(requestOtp.getRequestToken(), verifyOtpRequest.getPinCode());
+        } else {
+            isVerified = new VerifyOtpClientResponse();
+            isVerified.setStatus("success");
+            isVerified.setMessage("verified");
+        }
+
         if ("success".equals(isVerified.getStatus())) {
             requestOtp.setIsVerified(true);
             requestOtp.setUpdatedDate(ZonedDateTime.now(clock));
@@ -370,11 +378,18 @@ public class CustomerService {
             throw new InvalidRequestException("You are reached maximum OTP request, Please try again in next 1 hour.");
         }
 
-//        RequestOtpClientResponse clientResponse = smsService.requestOtp(mobileNo);
-        RequestOtpClientResponse clientResponse = new RequestOtpClientResponse();
-        Random gen = new Random();
-        clientResponse.setRefNo("GF83T"+ gen.nextInt());
-        clientResponse.setToken("TOKEN");
+        boolean isEnableRequestOTP = Boolean.getBoolean(systemConfigService.getSystemConfigByConfigName(SystemConfigName.ENABLE_REQUEST_OTP).getConfigValue());
+
+        RequestOtpClientResponse clientResponse;
+        if (isEnableRequestOTP) {
+            clientResponse = smsService.requestOtp(mobileNo);
+        } else {
+            log.info("Mockup Request OTP.");
+            clientResponse = new RequestOtpClientResponse();
+            Random gen = new Random();
+            clientResponse.setRefNo("GF83T"+ gen.nextInt());
+            clientResponse.setToken("TOKEN");
+        }
 
         int newCount = requestOtp.getRetryCount() + 1;
         requestOtp.setRequestedDate(ZonedDateTime.now(clock));
@@ -409,7 +424,7 @@ public class CustomerService {
         customerEntity.setLineUserId(verifyCustomerRequest.getLineUserId());
         customerEntity.setVerifiedStatus("ยืนยันสมาชิกแล้ว");
 
-        SystemConfigResponse memberCollectPoint = systemConfigService.getSystemConfigByConfigName("NEW_MEMBER_COLLECT_POINT");
+        SystemConfigResponse memberCollectPoint = systemConfigService.getSystemConfigByConfigName(SystemConfigName.NEW_MEMBER_COLLECT_POINT);
         int existingPoint = customerEntity.getMemberPoint();
         customerEntity.setMemberPoint(existingPoint + Integer.valueOf(memberCollectPoint.getConfigValue()));
 

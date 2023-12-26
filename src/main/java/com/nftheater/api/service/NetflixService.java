@@ -2,6 +2,7 @@ package com.nftheater.api.service;
 
 import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.constant.NetflixAccountType;
+import com.nftheater.api.constant.SystemConfigName;
 import com.nftheater.api.controller.customer.response.UpdateCustomerRequest;
 import com.nftheater.api.controller.netflix.request.*;
 import com.nftheater.api.controller.netflix.response.*;
@@ -636,10 +637,10 @@ public class NetflixService {
         // Get all config
         List<SystemConfigResponse> configs = systemConfigService.getAllConfig();
         String maxTvUserString = configs.stream().filter(
-                        config -> config.getConfigName().equalsIgnoreCase("NETFLIX_MAX_TV_USER"))
+                        config -> config.getConfigName().equalsIgnoreCase(SystemConfigName.NETFLIX_MAX_TV_USER))
                 .findFirst().orElse(null).getConfigValue();
         String maxOtherUserString = configs.stream().filter(
-                        config -> config.getConfigName().equalsIgnoreCase("NETFLIX_MAX_OTHER_USER"))
+                        config -> config.getConfigName().equalsIgnoreCase(SystemConfigName.NETFLIX_MAX_OTHER_USER))
                 .findFirst().orElse(null).getConfigValue();
 
         int maxTvUser = maxTvUserString != null ? Integer.valueOf(maxTvUserString) : 3;

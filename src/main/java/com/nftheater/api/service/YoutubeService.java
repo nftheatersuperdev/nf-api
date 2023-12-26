@@ -1,12 +1,14 @@
 package com.nftheater.api.service;
 
 import com.nftheater.api.constant.BusinessConstants;
+import com.nftheater.api.constant.SystemConfigName;
 import com.nftheater.api.controller.customer.response.CustomerResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.controller.youtube.request.*;
 import com.nftheater.api.controller.youtube.response.*;
+import com.nftheater.api.dto.SystemConfigDto;
 import com.nftheater.api.dto.YoutubeAccountDto;
 import com.nftheater.api.dto.YoutubePackageDto;
 import com.nftheater.api.entity.*;
@@ -161,7 +163,7 @@ public class YoutubeService {
         // Get all config
         List<SystemConfigResponse> configs = systemConfigService.getAllConfig();
         String maxUserString = configs.stream().filter(
-                config -> config.getConfigName().equalsIgnoreCase("YOUTUBE_MAX_USER"))
+                config -> config.getConfigName().equalsIgnoreCase(SystemConfigName.YOUTUBE_MAX_USER))
                 .findFirst().orElse(null).getConfigValue();
         int maxUser = maxUserString != null ? Integer.valueOf(maxUserString) : 5;
         int countUser = youtubeAccount.getUsers().stream().collect(Collectors.toList()).size();
@@ -207,7 +209,7 @@ public class YoutubeService {
         int existingUser = youtubeAccountEntity.getAccountLinks().stream()
                 .filter(type -> "USER".equalsIgnoreCase(type.getAccountType()))
                 .collect(Collectors.toList()).size();
-        int maxOther = Integer.valueOf(systemConfigService.getSystemConfigByConfigName("YOUTUBE_MAX_USER").getConfigValue());
+        int maxOther = Integer.valueOf(systemConfigService.getSystemConfigByConfigName(SystemConfigName.YOUTUBE_MAX_USER).getConfigValue());
         if (maxOther <= existingUser) {
             throw new InvalidRequestException("จำนวนผู้ใช้งานของบัญชี Youtube " + youtubeAccountEntity.getAccountName() + " เต็มหมดแล้ว กรุณาเลือกบัญชีอื่น");
         }
@@ -298,7 +300,7 @@ public class YoutubeService {
         String adminUser = adminUserEntity.getAdminName();
 
         int existingUser = toYoutubeAccountEntity.getAccountLinks().size();
-        int maxUser = Integer.valueOf(systemConfigService.getSystemConfigByConfigName("YOUTUBE_MAX_USER").getConfigValue());
+        int maxUser = Integer.valueOf(systemConfigService.getSystemConfigByConfigName(SystemConfigName.YOUTUBE_MAX_USER).getConfigValue());
         if (maxUser < transferUserRequest.getUserIds().size() + existingUser - 1) {
             throw new InvalidRequestException("ไม่สามารถย้ายลูกค้าได้ เนื่่องจากจำนวนลูกค้าในบัญชี "+ toYoutubeAccountEntity.getAccountName() + " เต็ม");
         }
