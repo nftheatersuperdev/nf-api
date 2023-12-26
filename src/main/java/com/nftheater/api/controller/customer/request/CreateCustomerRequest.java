@@ -18,4 +18,5 @@ public class CreateCustomerRequest {
     @NotBlank
     private String account;
     private UUID createdBy;
+    private String referrerCode;
 }

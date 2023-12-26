@@ -27,5 +27,8 @@ public class CustomerDto {
     private String updatedBy;
     private String account;
     private Integer memberPoint;
+    private String referralCode;
+    private String referrerCode;
+    private String lineUserId;
 
 }

@@ -1,18 +1,21 @@
 package com.nftheater.api.service;
 
+import com.nftheater.api.config.BusinessConfiguration;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
 import com.nftheater.api.controller.customer.request.SearchCustomerRequest;
 import com.nftheater.api.controller.customer.response.*;
 import com.nftheater.api.controller.member.request.VerifyCustomerRequest;
+import com.nftheater.api.controller.member.request.VerifyOtpRequest;
 import com.nftheater.api.controller.member.response.CustomerProfileResponse;
-import com.nftheater.api.controller.netflix.response.GetNetflixPackageResponse;
 import com.nftheater.api.controller.request.PageableRequest;
 import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.dto.CustomerDto;
 import com.nftheater.api.dto.NetflixPackageDto;
 import com.nftheater.api.dto.RewardDto;
+import com.nftheater.api.dto.client.sms.RequestOtpClientResponse;
+import com.nftheater.api.dto.client.sms.VerifyOtpClientResponse;
 import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.exception.InvalidRequestException;
@@ -23,8 +26,10 @@ import com.nftheater.api.security.SecurityUtils;
 import com.nftheater.api.utils.JwtUtil;
 import com.nftheater.api.utils.PaginationUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,8 +41,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -60,15 +65,19 @@ public class CustomerService {
     private final NetflixPackageRepository netflixPackageRepository;
     private final YoutubeAccountLinkRepository youtubeAccountLinkRepository;
     private final YoutubePackageRepository youtubePackageRepository;
+    private final RequestOtpRepository requestOtpRepository;
     private final CustomerMapper customerMapper;
     private final AdminUserService adminUserService;
     private final SystemConfigService systemConfigService;
     private final RewardService rewardService;
     private final UserInfoService userInfoService;
+    private final SmsService smsService;
     private final JwtUtil jwtUtil;
     private final SecurityUtils securityUtils;
     private final PasswordEncoder encoder;
     private final NetflixPackageMapper netflixPackageMapper;
+    private final BusinessConfiguration businessConfiguration;
+    private final Clock clock;
 
     public SearchCustomerResponse searchCustomer(SearchCustomerRequest request, PageableRequest pageableRequest) {
         final Pageable pageable = PageRequest.of(
@@ -209,9 +218,7 @@ public class CustomerService {
     }
 
     public CustomerProfileResponse getCustomerFromToken(HttpServletRequest httpServletRequest) throws DataNotFoundException {
-        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
-        String username = jwtUtil.extractUsername(customerToken);
-        UserDetails userDetails = userInfoService.loadUserByUsername(username);
+        UserDetails userDetails = this.getUserDetail(httpServletRequest);
 
         final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
                 .orElseThrow(() -> new DataNotFoundException("Customer ID " + userDetails.getUsername() + " is not found."));
@@ -242,6 +249,23 @@ public class CustomerService {
             profileResponse.setYoutubePackageName(youtubeAccountLinkEntity.getPackageName());
             profileResponse.setYoutubeDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
         }
+
+        RequestOtpEntity requestOtp = requestOtpRepository.findByUserId(customerEntity.getUserId())
+                .orElse(null);
+
+        if (requestOtp != null && requestOtp.getIsVerified()) {
+            profileResponse.setIsPhoneVerified(requestOtp.getIsVerified());
+        } else {
+            profileResponse.setIsPhoneVerified(false);
+        }
+
+        if (!StringUtils.isEmpty(customerEntity.getLineUserId())) {
+            profileResponse.setIsLineVerified(true);
+        } else {
+            profileResponse.setIsLineVerified(false);
+        }
+
+        profileResponse.setIsCustomerVerified( profileResponse.getIsLineVerified() && profileResponse.getIsPhoneVerified());
 
         return profileResponse;
     }
@@ -282,11 +306,95 @@ public class CustomerService {
         customerRepository.delete(deltedCustomer);
     }
 
+    @Transactional
+    public void verifyOtp(HttpServletRequest httpServletRequest, VerifyOtpRequest verifyOtpRequest) throws DataNotFoundException, InvalidRequestException {
+        UserDetails userDetails = this.getUserDetail(httpServletRequest);
+        log.info("Verify OTP for customer : {} with refCode : {}", userDetails.getUsername(), verifyOtpRequest.getRefCode());
+
+        final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
+                .orElseThrow(() -> new DataNotFoundException("Customer ID " + userDetails.getUsername() + " is not found."));
+
+        RequestOtpEntity requestOtp = requestOtpRepository.findByUserId(customerEntity.getUserId())
+                .orElseThrow(() -> new DataNotFoundException("Cannot found Otp request token of customer : {}", userDetails.getUsername()));
+
+        if (!requestOtp.getRefNo().equals(verifyOtpRequest.getRefCode())) {
+            throw new InvalidRequestException("RefNo is not same in system.");
+        }
+
+        if (requestOtp.getIsVerified()) {
+            throw new InvalidRequestException("Cannot verify Otp for verified mobile no.");
+        }
+
+//        VerifyOtpClientResponse isVerified = smsService.verifyOtp(requestOtp.getRequestToken(), verifyOtpRequest.getPinCode());
+        VerifyOtpClientResponse isVerified = new VerifyOtpClientResponse();
+        isVerified.setStatus("success");
+        isVerified.setMessage("verified");
+        if ("success".equals(isVerified.getStatus())) {
+            requestOtp.setIsVerified(true);
+            requestOtp.setUpdatedDate(ZonedDateTime.now(clock));
+            requestOtp.setMessage(isVerified.getMessage());
+
+            customerEntity.setPhoneNumber(requestOtp.getPhoneNumber());
+            customerEntity.setUpdatedDate(ZonedDateTime.now(clock));
+
+        } else {
+            requestOtp.setIsVerified(false);
+            requestOtp.setUpdatedDate(ZonedDateTime.now(clock));
+            requestOtp.setMessage(isVerified.getErrors().get(0).getMessage());
+
+            throw new InvalidRequestException(isVerified.getErrors().get(0).getMessage());
+        }
+    }
+
+    @Transactional
+    public String requestOtp(HttpServletRequest httpServletRequest, String mobileNo) throws DataNotFoundException, InvalidRequestException {
+        UserDetails userDetails = this.getUserDetail(httpServletRequest);
+        log.info("Request OTP for customer : {} , with mobile no : {}", userDetails.getUsername(), mobileNo);
+        final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
+                .orElseThrow(() -> new DataNotFoundException("Customer ID " + userDetails.getUsername() + " is not found."));
+
+        RequestOtpEntity requestOtp = requestOtpRepository.findByUserId(customerEntity.getUserId())
+                .orElse(new RequestOtpEntity());
+
+        if (requestOtp.getRetryCount() == null) {
+            requestOtp.setRetryCount(0);
+        }
+
+        if (requestOtp.getIsVerified() != null && requestOtp.getIsVerified()) {
+            throw new InvalidRequestException("Cannot request Otp for verified mobile no.");
+        }
+
+        ZonedDateTime coolDownTime = ZonedDateTime.now(clock).plusMinutes(businessConfiguration.getSmsCoolDownTime());
+        if (requestOtp.getRetryCount() >= businessConfiguration.getSmsMaxRetry()
+                && requestOtp.getUpdatedDate().isAfter(coolDownTime)) {
+            throw new InvalidRequestException("You are reached maximum OTP request, Please try again in next 1 hour.");
+        }
+
+//        RequestOtpClientResponse clientResponse = smsService.requestOtp(mobileNo);
+        RequestOtpClientResponse clientResponse = new RequestOtpClientResponse();
+        Random gen = new Random();
+        clientResponse.setRefNo("GF83T"+ gen.nextInt());
+        clientResponse.setToken("TOKEN");
+
+        int newCount = requestOtp.getRetryCount() + 1;
+        requestOtp.setRequestedDate(ZonedDateTime.now(clock));
+        requestOtp.setRequestToken(clientResponse.getToken());
+        requestOtp.setUserId(userDetails.getUsername());
+        requestOtp.setPhoneNumber(mobileNo);
+        requestOtp.setRefNo(clientResponse.getRefNo());
+        requestOtp.setMessage(clientResponse.getStatus());
+        requestOtp.setRetryCount(newCount);
+        requestOtp.setIsVerified(false);
+        requestOtp.setUpdatedDate(ZonedDateTime.now(clock));
+
+        requestOtp = requestOtpRepository.save(requestOtp);
+
+        return clientResponse.getRefNo();
+    }
+
     public void verifyCustomer(HttpServletRequest httpServletRequest, VerifyCustomerRequest verifyCustomerRequest) throws DataNotFoundException, InvalidRequestException {
         log.info("Verify customer");
-        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
-        String username = jwtUtil.extractUsername(customerToken);
-        UserDetails userDetails = userInfoService.loadUserByUsername(username);
+        UserDetails userDetails = this.getUserDetail(httpServletRequest);
         log.info("Verify customer {} with {}",userDetails.getUsername(), verifyCustomerRequest);
 
         final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
@@ -296,9 +404,9 @@ public class CustomerService {
             throw new InvalidRequestException("ลูกค้าทำการยืนยันสมาชิกเรียบร้อยแล้ว");
         }
 
-        customerEntity.setCustomerName(verifyCustomerRequest.getCustomerName());
         customerEntity.setPhoneNumber(verifyCustomerRequest.getPhoneNumber());
         customerEntity.setLineId(verifyCustomerRequest.getLineId());
+        customerEntity.setLineUserId(verifyCustomerRequest.getLineUserId());
         customerEntity.setVerifiedStatus("ยืนยันสมาชิกแล้ว");
 
         SystemConfigResponse memberCollectPoint = systemConfigService.getSystemConfigByConfigName("NEW_MEMBER_COLLECT_POINT");
@@ -312,9 +420,7 @@ public class CustomerService {
     public void redeemReward(HttpServletRequest httpServletRequest, UUID rewardId) throws DataNotFoundException, InvalidRequestException {
         log.info("Redeem reward");
         RewardDto rewardDto = rewardService.getRewardById(rewardId);
-        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
-        String username = jwtUtil.extractUsername(customerToken);
-        UserDetails userDetails = userInfoService.loadUserByUsername(username);
+        UserDetails userDetails = this.getUserDetail(httpServletRequest);
         log.info("Redeem reward {} for customer {} ",rewardDto.getRewardName(), userDetails.getUsername());
 
         final CustomerEntity customerEntity = customerRepository.findByUserId(userDetails.getUsername())
@@ -348,23 +454,24 @@ public class CustomerService {
                 .orElse(null);
 
         if (netflixAccountLinkEntity == null && additionalAccountLink == null) {
-            throw new InvalidRequestException("ลูกค้าไม่เคยสมัครแพ็คเกจ Netflix กรุณาติดต่อแอดมินเพื่อทำการสมัครแพ็คเกจ");
-        }
-        String packageName = "";
-        String device = "";
-        if (netflixAccountLinkEntity != null) {
-            packageName = netflixAccountLinkEntity.getPackageName();
-            device = netflixAccountLinkEntity.getAccountType();
+//            throw new InvalidRequestException("ลูกค้าไม่เคยสมัครแพ็คเกจ Netflix กรุณาติดต่อแอดมินเพื่อทำการสมัครแพ็คเกจ");
+            return null;
         } else {
-            packageName = additionalAccountLink.getPackageName();
-            device = "TV";
+            String packageName = "";
+            String device = "";
+            if (netflixAccountLinkEntity != null) {
+                packageName = netflixAccountLinkEntity.getPackageName();
+                device = netflixAccountLinkEntity.getAccountType();
+            } else {
+                packageName = additionalAccountLink.getPackageName();
+                device = "TV";
+            }
+            log.info("Current package is {}", packageName);
+            String finalPackageName = packageName;
+            NetflixPackageDto packageDto = netflixPackageRepository.findByNameAndDevice(finalPackageName, device).map(netflixPackageMapper::toDto)
+                    .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลแพ็คเกจ " + finalPackageName + " กรุณาติดต่อแอดมิน"));
+            return packageDto;
         }
-        log.info("Current package is {}", packageName);
-        String finalPackageName = packageName;
-        NetflixPackageDto packageDto = netflixPackageRepository.findByNameAndDevice(finalPackageName, device).map(netflixPackageMapper::toDto)
-                .orElseThrow(() -> new DataNotFoundException("ไม่พบข้อมูลแพ็คเกจ "+ finalPackageName +" กรุณาติดต่อแอดมิน"));
-
-        return packageDto;
     }
 
     private String generateUserId(String account) {
@@ -381,5 +488,11 @@ public class CustomerService {
         Random random = new Random();
         int num = random.nextInt(100000);
         return String.format("%05d", num);
+    }
+
+    private UserDetails getUserDetail(HttpServletRequest httpServletRequest) {
+        String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
+        String username = jwtUtil.extractUsername(customerToken);
+        return userInfoService.loadUserByUsername(username);
     }
 }

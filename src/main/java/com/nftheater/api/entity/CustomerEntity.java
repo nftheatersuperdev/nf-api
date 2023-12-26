@@ -75,6 +75,15 @@ public class CustomerEntity {
     @Column(name = "member_point")
     private Integer memberPoint;
 
+    @Column(name = "referral_code")
+    private String referralCode;
+
+    @Column(name = "referrer_code")
+    private String referrerCode;
+
+    @Column(name = "line_user_id")
+    private String lineUserId;
+
     @OneToMany(mappedBy = "user")
     private List<NetflixAdditionalAccountLinkEntity> netflixAdditionalAccountLinks;
 

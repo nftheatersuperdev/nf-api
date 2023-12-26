@@ -25,5 +25,6 @@ public class CustomerResponse {
     private ZonedDateTime updatedDate;
     private String updatedBy;
     private String account;
+    private String referralCode;
 
 }

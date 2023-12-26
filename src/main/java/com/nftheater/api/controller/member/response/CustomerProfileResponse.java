@@ -20,4 +20,8 @@ public class CustomerProfileResponse {
     private String youtubePackageName;
     private long youtubeDayLeft;
     private int memberPoint;
+    private String lineId;
+    private Boolean isPhoneVerified;
+    private Boolean isLineVerified;
+    private Boolean isCustomerVerified;
 }

@@ -1,7 +1,9 @@
 package com.nftheater.api.controller.member;
 
 import com.nftheater.api.controller.member.request.AuthenticationRequest;
+import com.nftheater.api.controller.member.request.RequestOtpRequest;
 import com.nftheater.api.controller.member.request.VerifyCustomerRequest;
+import com.nftheater.api.controller.member.request.VerifyOtpRequest;
 import com.nftheater.api.controller.member.response.AuthenticationResponse;
 import com.nftheater.api.controller.member.response.CustomerProfileResponse;
 import com.nftheater.api.controller.netflix.response.GetNetflixPackageResponse;
@@ -27,6 +29,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,6 +84,26 @@ public class MemberController {
         return new GeneralResponse<>(SUCCESS, null);
     }
 
+    @PostMapping("/v1/member/verify-otp")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    public GeneralResponse<Void> verifyOtp(HttpServletRequest request, @RequestBody VerifyOtpRequest verifyOtpRequest)
+            throws DataNotFoundException, InvalidRequestException {
+        log.info("===== Start verify otp =====");
+        customerService.verifyOtp(request, verifyOtpRequest);
+        log.info("===== End verify otp =====");
+        return new GeneralResponse<>(SUCCESS, null);
+    }
+
+    @PostMapping("/v1/member/request-otp")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    public GeneralResponse<String> requestOtp(HttpServletRequest request, @RequestBody RequestOtpRequest requestOtpRequest)
+            throws DataNotFoundException, InvalidRequestException {
+        log.info("===== Start request otp =====");
+        String refNo = customerService.requestOtp(request, requestOtpRequest.getMobileNo());
+        log.info("===== End request otp =====");
+        return new GeneralResponse<>(SUCCESS, refNo);
+    }
+
     @PostMapping("/v1/member/reward/{rewardId}/redeem")
     @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
     public GeneralResponse<Void> redeemReward(HttpServletRequest request, @PathVariable("rewardId") UUID rewardId)
@@ -106,7 +129,10 @@ public class MemberController {
             throws DataNotFoundException, InvalidRequestException {
         log.info("===== Start get netflix package for member =====");
         NetflixPackageDto currentPackage = customerService.getMemberCurrentNetflixPackage(request);
-        List<GetNetflixPackageResponse> netflixPackages = netflixService.getAllNetflixPackageByDevice(currentPackage.getDevice());
+        List<GetNetflixPackageResponse> netflixPackages = new ArrayList<>();
+        if (currentPackage != null ) {
+            netflixPackages = netflixService.getAllNetflixPackageByDevice(currentPackage.getDevice());
+        }
         log.info("===== End get netflix package for member =====");
         return new GeneralResponse<>(SUCCESS, netflixPackages);
     }
