@@ -425,7 +425,7 @@ public class CustomerService {
         customerEntity.setVerifiedStatus("ยืนยันสมาชิกแล้ว");
 
         SystemConfigResponse memberCollectPoint = systemConfigService.getSystemConfigByConfigName(SystemConfigName.NEW_MEMBER_COLLECT_POINT);
-        int existingPoint = customerEntity.getMemberPoint();
+        int existingPoint = customerEntity.getMemberPoint() == null ? 0 : customerEntity.getMemberPoint();
         customerEntity.setMemberPoint(existingPoint + Integer.valueOf(memberCollectPoint.getConfigValue()));
 
         customerRepository.save(customerEntity);
@@ -505,7 +505,7 @@ public class CustomerService {
         return String.format("%05d", num);
     }
 
-    private UserDetails getUserDetail(HttpServletRequest httpServletRequest) {
+    public UserDetails getUserDetail(HttpServletRequest httpServletRequest) {
         String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
         String username = jwtUtil.extractUsername(customerToken);
         return userInfoService.loadUserByUsername(username);

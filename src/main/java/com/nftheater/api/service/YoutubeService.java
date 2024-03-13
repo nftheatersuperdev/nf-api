@@ -8,7 +8,6 @@ import com.nftheater.api.controller.response.PaginationResponse;
 import com.nftheater.api.controller.systemconfig.response.SystemConfigResponse;
 import com.nftheater.api.controller.youtube.request.*;
 import com.nftheater.api.controller.youtube.response.*;
-import com.nftheater.api.dto.SystemConfigDto;
 import com.nftheater.api.dto.YoutubeAccountDto;
 import com.nftheater.api.dto.YoutubePackageDto;
 import com.nftheater.api.entity.*;

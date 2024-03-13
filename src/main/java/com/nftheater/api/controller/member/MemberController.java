@@ -1,9 +1,6 @@
 package com.nftheater.api.controller.member;
 
-import com.nftheater.api.controller.member.request.AuthenticationRequest;
-import com.nftheater.api.controller.member.request.RequestOtpRequest;
-import com.nftheater.api.controller.member.request.VerifyCustomerRequest;
-import com.nftheater.api.controller.member.request.VerifyOtpRequest;
+import com.nftheater.api.controller.member.request.*;
 import com.nftheater.api.controller.member.response.AuthenticationResponse;
 import com.nftheater.api.controller.member.response.CustomerProfileResponse;
 import com.nftheater.api.controller.netflix.response.GetNetflixPackageResponse;
@@ -14,10 +11,7 @@ import com.nftheater.api.dto.RewardDto;
 import com.nftheater.api.exception.BadCredentialsException;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.exception.InvalidRequestException;
-import com.nftheater.api.service.CustomerService;
-import com.nftheater.api.service.NetflixService;
-import com.nftheater.api.service.RewardService;
-import com.nftheater.api.service.YoutubeService;
+import com.nftheater.api.service.*;
 import com.nftheater.api.utils.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +38,7 @@ public class MemberController {
     private final NetflixService netflixService;
     private final YoutubeService youtubeService;
     private final RewardService rewardService;
+    private final EventService eventService;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/v1/member/login")
@@ -146,4 +141,25 @@ public class MemberController {
         return new GeneralResponse<>(SUCCESS, response);
     }
 
+    @GetMapping("/v1/member/event/{eventName}/available")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    public GeneralResponse<Boolean> checkEventAvailable(@PathVariable("eventName") String eventName) throws DataNotFoundException {
+        log.info("===== Start check Event: {} is available? =====", eventName);
+        boolean result = eventService.isEventAvailable(eventName);
+        log.info("===== End check Event: {} is available: {}  =====", eventName, result);
+        return new GeneralResponse<>(SUCCESS, result);
+    }
+
+    @PostMapping("/v1/member/event/{eventName}/register")
+    @PreAuthorize("hasAuthority('ROLE_CUSTOMER')")
+    public GeneralResponse<Boolean> registerEvent(
+            @PathVariable("eventName") String eventName,
+            @RequestBody EventRegisterRequest eventRegisterRequest,
+            HttpServletRequest request
+    ) throws DataNotFoundException, InvalidRequestException {
+        log.info("===== Start register Event: {} =====", eventName);
+        UUID registerId = eventService.registerEvent(eventName, eventRegisterRequest, request);
+        log.info("===== End register Event: {}  =====", eventName);
+        return new GeneralResponse<>(SUCCESS, true);
+    }
 }

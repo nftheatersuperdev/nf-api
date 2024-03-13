@@ -8,7 +8,6 @@ import com.nftheater.api.entity.RewardEntity;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.mapper.RewardMapper;
 import com.nftheater.api.repository.RewardRepository;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

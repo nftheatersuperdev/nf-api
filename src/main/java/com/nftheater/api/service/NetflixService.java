@@ -20,7 +20,6 @@ import com.nftheater.api.mapper.NetflixAccountMapper;
 import com.nftheater.api.mapper.NetflixPackageMapper;
 import com.nftheater.api.repository.*;
 import com.nftheater.api.utils.PaginationUtils;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -316,6 +315,7 @@ public class NetflixService {
                 savedAccountLinkEntity.setAddedDate(ZonedDateTime.now());
                 savedAccountLinkEntity.setUser(customerEntity);
                 savedAccountLinkEntity.setAccount(netflixAccountEntity);
+                savedAccountLinkEntity.setPackageName(netflixPackage.getName());
 
                 netflixAccountLinkRepository.save(savedAccountLinkEntity);
             } else {

@@ -2,15 +2,15 @@ package com.nftheater.api.client;
 
 import com.nftheater.api.config.BusinessConfiguration;
 import com.nftheater.api.dto.client.line.SendMessageClientRequest;
-import com.nftheater.api.dto.client.sms.VerifyOtpClientResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
 
 @Slf4j
 @Component
