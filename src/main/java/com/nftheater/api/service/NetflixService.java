@@ -661,26 +661,33 @@ public class NetflixService {
         }
 
         int countTvAccount = netflixAccount.getUsers().stream()
-                .filter(acct -> !acct.getAccountType().equals(NetflixAccountType.OTHER) ).collect(Collectors.toList()).size();
+                .filter(acct -> acct.getAccountType().equals(NetflixAccountType.TV)).collect(Collectors.toList()).size();
+        int countAdditionalAccount = netflixAccount.getUsers().stream()
+                .filter(acct -> acct.getAccountType().equals(NetflixAccountType.ADDITIONAL)).collect(Collectors.toList()).size();
         int countOtherAccount = netflixAccount.getUsers().stream()
-                .filter(acct -> acct.getAccountType().equals(NetflixAccountType.OTHER) ).collect(Collectors.toList()).size();
+                .filter(acct -> acct.getAccountType().equals(NetflixAccountType.OTHER)).collect(Collectors.toList()).size();
 
-        while (countTvAccount < maxTvUser) {
+        while (countTvAccount + countAdditionalAccount < maxTvUser) {
             NetflixLinkUserResponse linkTvUser = new NetflixLinkUserResponse();
             if (countTvAccount == 0) {
                 linkTvUser.setAccountType(NetflixAccountType.TV);
                 linkTvUser.setAccountStatus(getAccountStatus(null));
                 linkTvUser.setColor("#008000");
                 linkTvUser.setSort(1);
+
+                linkTvUser.setUser(null);
+                netflixAccount.getUsers().add(linkTvUser);
+                countTvAccount++;
             } else {
                 linkTvUser.setAccountType(NetflixAccountType.ADDITIONAL);
                 linkTvUser.setAccountStatus("ยังไม่เปิดจอเสริม");
                 linkTvUser.setColor("#000000");
                 linkTvUser.setSort(2);
+
+                linkTvUser.setUser(null);
+                netflixAccount.getUsers().add(linkTvUser);
+                countAdditionalAccount++;
             }
-            linkTvUser.setUser(null);
-            netflixAccount.getUsers().add(linkTvUser);
-            countTvAccount++;
         }
 
         while (countOtherAccount < maxOtherUser) {
