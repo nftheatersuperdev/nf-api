@@ -11,6 +11,7 @@ public class SearchNetflixAccountRequest {
     private String changeDate;
     private String billDate;
     private String accountName;
+    private String accountEmail;
     private Boolean isActive;
     private List<String> customerStatus = new ArrayList<>();
     private Boolean filterTVAvailable;

@@ -84,6 +84,9 @@ public class NetflixService {
             if (!request.getAccountName().isBlank()) {
                 specification = specification.and(accountNameEqual(BusinessConstants.NETFLIX_PREFIX + "-" + request.getAccountName()));
             }
+            if (!request.getAccountEmail().isBlank()) {
+                specification = specification.and(accountEmailContain(request.getAccountEmail()));
+            }
             if (request.getCustomerStatus().size() != 0) {
                 specification = specification.and(customerStatusIn(request.getCustomerStatus()));
             }

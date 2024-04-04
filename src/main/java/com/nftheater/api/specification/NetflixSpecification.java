@@ -2,6 +2,7 @@ package com.nftheater.api.specification;
 
 import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.entity.*;
+import com.nftheater.api.utils.SqlUtil;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,6 +38,10 @@ public class NetflixSpecification {
 
     public static Specification<NetflixAccountEntity> accountNameEqual(String accountName) {
         return (netflixAccountEntity, cq, cb) -> cb.equal(netflixAccountEntity.get(NetflixAccountEntity_.ACCOUNT_NAME), accountName);
+    }
+
+    public static Specification<NetflixAccountEntity> accountEmailContain(String accountEmail) {
+        return (netflixAccountEntity, cq, cb) -> cb.like(netflixAccountEntity.get(NetflixAccountEntity_.NETFLIX_EMAIL), "%" + SqlUtil.escape(accountEmail) + "%");
     }
 
     public static Specification<NetflixAccountEntity> customerStatusIn(List<String> customerStatus) {
