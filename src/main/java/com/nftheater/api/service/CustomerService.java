@@ -31,6 +31,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -229,7 +230,8 @@ public class CustomerService {
         NetflixAccountLinkEntity netflixAccountLinkEntity = netflixAccountLinkRepository.findByUserId(customerEntity.getId())
                 .orElse(null);
         if (netflixAccountLinkEntity != null) {
-            NetflixAccountEntity netflix = netflixRepository.findById(netflixAccountLinkEntity.getAccount().getId()).get();
+            NetflixAccountEntity netflix = netflixRepository.findById(netflixAccountLinkEntity.getAccount().getId())
+                            .orElse(new NetflixAccountEntity());
             profileResponse.setNetflixEmail(netflix.getNetflixEmail());
             profileResponse.setNetflixPassword(netflix.getNetflixPassword());
             profileResponse.setNetflixPackageName(netflixAccountLinkEntity.getPackageName());
@@ -238,10 +240,11 @@ public class CustomerService {
         NetflixAdditionalAccountLinkEntity additionalAccountLink = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId())
                 .orElse(null);
         if (additionalAccountLink != null) {
-            NetflixAdditionalAccountEntity additionalAccount = netflixAdditionalAccountRepository.findById(additionalAccountLink.getId().getAdditionalAccountId()).get();
+            NetflixAdditionalAccountEntity additionalAccount = netflixAdditionalAccountRepository.findById(additionalAccountLink.getId().getAdditionalAccountId())
+                            .orElse(new NetflixAdditionalAccountEntity());
             profileResponse.setNetflixEmail(additionalAccount.getAdditionalEmail());
             profileResponse.setNetflixPassword(additionalAccount.getAdditionalPassword());
-            profileResponse.setNetflixPackageName(netflixAccountLinkEntity.getPackageName());
+            profileResponse.setNetflixPackageName(additionalAccountLink.getPackageName());
             profileResponse.setNetflixDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
         }
         YoutubeAccountLinkEntity youtubeAccountLinkEntity = youtubeAccountLinkRepository.findByUserId(customerEntity.getId())
