@@ -365,9 +365,13 @@ public class NetflixService {
 
             netflixAccountLinkRepository.save(accountLinkEntity);
         }
-
         // Extend Customer day left.
-        long newDayLeft = customerService.extendDayForUser(customerEntity, netflixPackage.getDay(), adminUser);
+        if (request.getExtendDay() == netflixPackage.getDay()) {
+            customerService.extendDayForUser(customerEntity, netflixPackage.getDay(), adminUser);
+        } else {
+            log.info("Extend Day by use request {} days.", request.getExtendDay());
+            customerService.extendDayForUser(customerEntity, request.getExtendDay(), adminUser);
+        }
 
     }
 

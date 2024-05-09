@@ -43,6 +43,9 @@ public class NetflixPackageEntity {
     @Column(name = "device")
     private String device;
 
+    @Column(name = "is_active")
+    private Boolean isActive;
+
     @PrePersist
     public void prePersist() {
         createdDate = ZonedDateTime.now();

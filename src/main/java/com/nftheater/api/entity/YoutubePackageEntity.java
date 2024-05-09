@@ -43,6 +43,9 @@ public class YoutubePackageEntity {
     @Column(name = "type")
     private String type;
 
+    @Column(name = "is_active")
+    private Boolean isActive;
+
     @PrePersist
     public void prePersist() {
         createdDate = ZonedDateTime.now();
