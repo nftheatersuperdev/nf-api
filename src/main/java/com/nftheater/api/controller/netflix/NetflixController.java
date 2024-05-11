@@ -33,7 +33,7 @@ public class NetflixController {
     @Secured({Module.ALL, Module.NETFLIX})
     @PostMapping("/v1/netflix/search")
     public GeneralResponse<SearchNetflixAccountResponse> searchNetflix(
-            @RequestBody(required = false)SearchNetflixAccountRequest searchNetflixAccountRequest,
+            @RequestBody(required = false) SearchNetflixAccountRequest searchNetflixAccountRequest,
             PageableRequest pageableRequest
     ) {
         log.info("Start Search Netflix");
