@@ -1,5 +1,6 @@
 package com.nftheater.api.service;
 
+import com.nftheater.api.constant.NetflixAccountType;
 import com.nftheater.api.controller.packages.request.UpdatePackageRequest;
 import com.nftheater.api.dto.PackageDto;
 import com.nftheater.api.constant.Module;
@@ -30,26 +31,44 @@ public class PackageService {
 
     public List<PackageDto> getAllPackage() {
         log.info("Get All Package.");
-        List<NetflixPackageEntity> netflixPackageEntities = netflixPackageRepository.findAll();
-        List<YoutubePackageEntity> youtubePackageEntities = youtubePackageRepository.findAll();
-        log.info("Netflix package size : {}", netflixPackageEntities.size());
-        log.info("Youtube package size : {}", youtubePackageEntities.size());
+        List<NetflixPackageEntity> netflixTvPackageEntities = netflixPackageRepository.findByDevice(NetflixAccountType.TV.name());
+        List<NetflixPackageEntity> netflixOtherPackageEntities = netflixPackageRepository.findByDevice(NetflixAccountType.OTHER.name());
+        List<YoutubePackageEntity> youtubeNewPackageEntities = youtubePackageRepository.findByType("NEW");
+        List<YoutubePackageEntity> youtubeExtendPackageEntities = youtubePackageRepository.findByType("EXTEND");
+        log.info("Netflix TV package size : {}", netflixTvPackageEntities.size());
+        log.info("Netflix Other package size : {}", netflixOtherPackageEntities.size());
+        log.info("Youtube package size : {}", youtubeNewPackageEntities.size());
         List<PackageDto> allPackage = new ArrayList<>();
-        List<PackageDto> netflixPackage = netflixPackageEntities
+        List<PackageDto> netflixTvPackage = netflixTvPackageEntities
                 .stream()
                 .map(packageMapper::toPackageDto)
                 .sorted(Comparator.comparing(PackageDto::getDay))
                 .collect(Collectors.toList());
-        netflixPackage.forEach(n -> n.setModule(Module.NETFLIX));
-        List<PackageDto> youtubePackage = youtubePackageEntities
+        netflixTvPackage.forEach(n -> n.setModule(Module.NETFLIX));
+        List<PackageDto> netflixOtherPackage = netflixOtherPackageEntities
                 .stream()
                 .map(packageMapper::toPackageDto)
                 .sorted(Comparator.comparing(PackageDto::getDay))
                 .collect(Collectors.toList());
-        youtubePackage.forEach(y -> y.setModule(Module.YOUTUBE));
+        netflixOtherPackage.forEach(n -> n.setModule(Module.NETFLIX));
 
-        allPackage.addAll(netflixPackage);
-        allPackage.addAll(youtubePackage);
+        List<PackageDto> youtubeNewPackage = youtubeNewPackageEntities
+                .stream()
+                .map(packageMapper::toPackageDto)
+                .sorted(Comparator.comparing(PackageDto::getDay))
+                .collect(Collectors.toList());
+        youtubeNewPackage.forEach(y -> y.setModule(Module.YOUTUBE));
+        List<PackageDto> youtubeExtendPackage = youtubeExtendPackageEntities
+                .stream()
+                .map(packageMapper::toPackageDto)
+                .sorted(Comparator.comparing(PackageDto::getDay))
+                .collect(Collectors.toList());
+        youtubeExtendPackage.forEach(y -> y.setModule(Module.YOUTUBE));
+
+        allPackage.addAll(netflixTvPackage);
+        allPackage.addAll(netflixOtherPackage);
+        allPackage.addAll(youtubeNewPackage);
+        allPackage.addAll(youtubeExtendPackage);
         return allPackage;
     }
 
