@@ -622,6 +622,7 @@ public class NetflixService {
         log.info("All Netflix package size : {}", allPackageDtos.size());
         List<GetNetflixPackageResponse> allPackageResponse = allPackageDtos.stream()
                 .map(netflixPackageMapper::toPackageResponse)
+                .sorted(Comparator.comparing(GetNetflixPackageResponse::getPackageDay))
                 .toList();
         return allPackageResponse;
     }

@@ -151,6 +151,7 @@ public class YoutubeService {
     public List<GetYoutubePackageResponse> getAllYoutubePackage(String packageType) {
         List<YoutubePackageDto> allPackageDtos = youtubePackageRepository.findByType(packageType)
                 .stream().map(youtubePackageMapper::toDto)
+                .sorted(Comparator.comparing(YoutubePackageDto::getDay))
                 .toList();
         List<GetYoutubePackageResponse> allPackageResponse = allPackageDtos.stream()
                 .map(youtubePackageMapper::toPackageResponse)

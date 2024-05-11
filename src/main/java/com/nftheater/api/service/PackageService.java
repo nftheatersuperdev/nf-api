@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -37,11 +38,13 @@ public class PackageService {
         List<PackageDto> netflixPackage = netflixPackageEntities
                 .stream()
                 .map(packageMapper::toPackageDto)
+                .sorted(Comparator.comparing(PackageDto::getDay))
                 .collect(Collectors.toList());
         netflixPackage.forEach(n -> n.setModule(Module.NETFLIX));
         List<PackageDto> youtubePackage = youtubePackageEntities
                 .stream()
                 .map(packageMapper::toPackageDto)
+                .sorted(Comparator.comparing(PackageDto::getDay))
                 .collect(Collectors.toList());
         youtubePackage.forEach(y -> y.setModule(Module.YOUTUBE));
 
