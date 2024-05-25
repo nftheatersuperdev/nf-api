@@ -194,7 +194,12 @@ public class CustomerService {
     }
 
     public long extendDayForUser(CustomerEntity customerEntity, int extendDay, String adminUser) {
-        ZonedDateTime newExpiredDateTime = customerEntity.getExpiredDate().plusDays(extendDay);
+        ZonedDateTime newExpiredDateTime;
+        if ("หมดอายุ".equalsIgnoreCase(customerEntity.getCustomerStatus())) {
+            newExpiredDateTime = ZonedDateTime.now().plusDays(extendDay);
+        } else {
+            newExpiredDateTime = customerEntity.getExpiredDate().plusDays(extendDay);
+        }
         customerEntity.setExpiredDate(newExpiredDateTime);
         customerEntity.setCustomerStatus("กำลังใช้งาน");
         customerEntity.setUpdatedBy(adminUser);
