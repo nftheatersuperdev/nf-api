@@ -32,6 +32,16 @@ public class NetflixSpecification {
         };
     }
 
+    public static Specification<NetflixAdditionalAccountEntity> addUserIdContain(String userId) {
+        return (netflixAdditionalAccountEntity, cq, cb) -> {
+            Join<NetflixAdditionalAccountEntity, NetflixAdditionalAccountLinkEntity> accountJoinAccountLink =
+                    netflixAdditionalAccountEntity.join(NetflixAdditionalAccountEntity_.NETFLIX_ADDITIONAL_ACCOUNT_LINK, JoinType.INNER);
+            Join<NetflixAdditionalAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer =
+                    accountJoinAccountLink.join(NetflixAdditionalAccountLinkEntity_.USER, JoinType.INNER);
+            return cb.like(accountLinkJoinCustomer.get(CustomerEntity_.USER_ID), BusinessConstants.PERCENT_SIGN + userId + BusinessConstants.PERCENT_SIGN);
+        };
+    }
+
     public static Specification<NetflixAccountEntity> isActiveEqual(Boolean isActive) {
         return (netflixAccountEntity, cq, cb) -> cb.equal(netflixAccountEntity.get(NetflixAccountEntity_.IS_ACTIVE), isActive);
     }

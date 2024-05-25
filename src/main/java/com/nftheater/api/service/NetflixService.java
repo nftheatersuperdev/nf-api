@@ -17,6 +17,7 @@ import com.nftheater.api.entity.*;
 import com.nftheater.api.exception.DataNotFoundException;
 import com.nftheater.api.exception.InvalidRequestException;
 import com.nftheater.api.mapper.NetflixAccountMapper;
+import com.nftheater.api.mapper.NetflixAdditionalAccountMapper;
 import com.nftheater.api.mapper.NetflixPackageMapper;
 import com.nftheater.api.repository.*;
 import com.nftheater.api.utils.PaginationUtils;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.nftheater.api.mapper.NetflixAccountMapper.calculateDayLeft;
 import static com.nftheater.api.mapper.NetflixAccountMapper.getCustomerStatusFromDayLeft;
 import static com.nftheater.api.specification.NetflixSpecification.*;
 import static com.nftheater.api.utils.BusinessUtils.getAccountStatus;
@@ -53,6 +55,7 @@ public class NetflixService {
 
     private final NetflixAccountMapper netflixAccountMapper;
     private final NetflixPackageMapper netflixPackageMapper;
+    private final NetflixAdditionalAccountMapper netflixAdditionalAccountMapper;
     private final NetflixRepository netflixRepository;
     private final NetflixAccountLinkRepository netflixAccountLinkRepository;
     private final NetflixAdditionalAccountRepository netflixAdditionalAccountRepository;
@@ -71,6 +74,9 @@ public class NetflixService {
                 Sort.by(NetflixAccountEntity_.CREATED_DATE).ascending()
         );
 
+        boolean isFindAdditionalAccount = false;
+
+        // Find Netflix Account
         Specification<NetflixAccountEntity> specification = Specification.where(null);
         if (request != null) {
             if (!request.getChangeDate().equalsIgnoreCase("-")) {
@@ -81,6 +87,7 @@ public class NetflixService {
             }
             if (!request.getUserId().isBlank() ) {
                 specification = specification.and(userIdContain(request.getUserId()));
+                isFindAdditionalAccount = true;
             }
             if (!request.getAccountName().isBlank()) {
                 specification = specification.and(accountNameEqual(BusinessConstants.NETFLIX_PREFIX + "-" + request.getAccountName()));
@@ -97,16 +104,30 @@ public class NetflixService {
         Page<NetflixAccountEntity> netflixAccountEntityPage = netflixRepository.findAll(specification, pageable);
         Page<NetflixAccountDto> netflixAccountDtoPage = netflixAccountEntityPage.map(netflixAccountMapper::toDto);
         List<NetflixAccountDto> netflixAccountDtoList = netflixAccountDtoPage.getContent();
+        List<NetflixAccountDto> additionalNetflixAccountDtoList = new ArrayList<>();
+
+        if (isFindAdditionalAccount) {
+            // Find Netflix Additional Account
+            log.info("Find user in Netflix additional account");
+            Specification<NetflixAdditionalAccountEntity> additionalSpecification = Specification.where(null);
+            additionalSpecification = additionalSpecification.and(addUserIdContain(request.getUserId()));
+            Page<NetflixAdditionalAccountEntity> netflixAdditionalAccountEntityPage = netflixAdditionalAccountRepository.findAll(additionalSpecification, pageable);
+            Page<NetflixAdditionalAccountDto> netflixAdditionalAccountDtoPage = netflixAdditionalAccountEntityPage.map(netflixAdditionalAccountMapper::toDto);
+            List<NetflixAdditionalAccountDto> netflixAdditionalAccountDtoList = netflixAdditionalAccountDtoPage.getContent();
+            log.info("Found user in Netflix additional account : {}", netflixAdditionalAccountDtoList.size());
+            netflixAdditionalAccountDtoList.stream().forEach(add -> additionalNetflixAccountDtoList.add(add.getNetflixAccount()));
+        }
 
         PaginationResponse pagination = PaginationUtils.createPagination(netflixAccountDtoPage);
         SearchNetflixAccountResponse response = new SearchNetflixAccountResponse();
         response.setPagination(pagination);
         List<NetflixAccountResponse> netflixAccountResponse = netflixAccountMapper.mapDtoToResponses(netflixAccountDtoList);
+        netflixAccountResponse.addAll(netflixAccountMapper.mapDtoToResponses(additionalNetflixAccountDtoList));
 
         netflixAccountResponse.stream().forEach(acct -> {
                 for (NetflixAdditionalAccountResponse add : acct.getAdditionalAccounts()) {
                     if (add.getUser() != null) {
-                        add.getUser().setDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), add.getUser().getExpiredDate()));
+                        add.getUser().setDayLeft(calculateDayLeft(add.getUser().getExpiredDate()));
                     }
                 }
             }

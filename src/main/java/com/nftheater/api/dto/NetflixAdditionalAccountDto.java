@@ -16,4 +16,5 @@ public class NetflixAdditionalAccountDto {
     private String updatedBy;
     private CustomerDto user;
     private String accountStatus;
+    private NetflixAccountDto netflixAccount;
 }

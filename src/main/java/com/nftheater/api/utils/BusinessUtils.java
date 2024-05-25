@@ -11,11 +11,13 @@ public class BusinessUtils {
             return "#FF0000";
         } else if (acctStatus.equalsIgnoreCase("Admin")) {
             return "#FF0000";
-        }else if (acctStatus.contains("รอ")) {
+        } else if (acctStatus.contains("รอ")) {
             return "#FFC100";
-        }else if (acctStatus.equalsIgnoreCase("ยังไม่เปิดจอเสริม")) {
+        } else if (acctStatus.equalsIgnoreCase("ยังไม่เปิดจอเสริม")) {
+            return "#C1C1C1";
+        } else if (acctStatus.equalsIgnoreCase("หมดอายุ")) {
             return "#000000";
-        }else {
+        } else {
             return "#008000";
         }
     }
