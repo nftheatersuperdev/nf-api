@@ -18,7 +18,7 @@ public class NetflixLinkAdditionalEntity {
     private NetflixAccountEntity account;
 
     @MapsId("additionalId")
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "additional_id", nullable = false)
     private NetflixAdditionalAccountEntity additional;
 

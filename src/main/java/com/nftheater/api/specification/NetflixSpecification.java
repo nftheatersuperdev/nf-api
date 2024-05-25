@@ -26,18 +26,22 @@ public class NetflixSpecification {
 
     public static Specification<NetflixAccountEntity> userIdContain(String userId) {
         return (netflixAccountEntity, cq, cb) -> {
-                Join<NetflixAccountEntity, NetflixAccountLinkEntity> accountJoinAccountLink = netflixAccountEntity.join(NetflixAccountEntity_.ACCOUNT_LINKS, JoinType.INNER);
-                Join<NetflixAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(NetflixAccountLinkEntity_.USER, JoinType.INNER);
+                Join<NetflixAccountEntity, NetflixAccountLinkEntity> accountJoinAccountLink = netflixAccountEntity.join(NetflixAccountEntity_.ACCOUNT_LINKS, JoinType.LEFT);
+                Join<NetflixAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(NetflixAccountLinkEntity_.USER, JoinType.LEFT);
         return cb.like(accountLinkJoinCustomer.get(CustomerEntity_.USER_ID), BusinessConstants.PERCENT_SIGN + userId + BusinessConstants.PERCENT_SIGN);
         };
     }
 
-    public static Specification<NetflixAdditionalAccountEntity> addUserIdContain(String userId) {
-        return (netflixAdditionalAccountEntity, cq, cb) -> {
+    public static Specification<NetflixAccountEntity> addUserIdContain(String userId) {
+        return (netflixAccountEntity, cq, cb) -> {
+            Join<NetflixAccountEntity, NetflixLinkAdditionalEntity> accountJoinAdditionalLink =
+                    netflixAccountEntity.join(NetflixAccountEntity_.ADDITIONAL_ACCOUNTS, JoinType.LEFT);
+            Join<NetflixLinkAdditionalEntity, NetflixAdditionalAccountEntity> linkAdditionalJoinAdditional =
+                    accountJoinAdditionalLink.join(NetflixLinkAdditionalEntity_.ADDITIONAL, JoinType.LEFT);
             Join<NetflixAdditionalAccountEntity, NetflixAdditionalAccountLinkEntity> accountJoinAccountLink =
-                    netflixAdditionalAccountEntity.join(NetflixAdditionalAccountEntity_.NETFLIX_ADDITIONAL_ACCOUNT_LINK, JoinType.INNER);
+                    linkAdditionalJoinAdditional.join(NetflixAdditionalAccountEntity_.NETFLIX_ADDITIONAL_ACCOUNT_LINK, JoinType.LEFT);
             Join<NetflixAdditionalAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer =
-                    accountJoinAccountLink.join(NetflixAdditionalAccountLinkEntity_.USER, JoinType.INNER);
+                    accountJoinAccountLink.join(NetflixAdditionalAccountLinkEntity_.USER, JoinType.LEFT);
             return cb.like(accountLinkJoinCustomer.get(CustomerEntity_.USER_ID), BusinessConstants.PERCENT_SIGN + userId + BusinessConstants.PERCENT_SIGN);
         };
     }
@@ -56,8 +60,8 @@ public class NetflixSpecification {
 
     public static Specification<NetflixAccountEntity> customerStatusIn(List<String> customerStatus) {
         return (netflixAccountEntity, cq, cb) -> {
-            Join<NetflixAccountEntity, NetflixAccountLinkEntity> accountJoinAccountLink = netflixAccountEntity.join(NetflixAccountEntity_.ACCOUNT_LINKS, JoinType.INNER);
-            Join<NetflixAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(NetflixAccountLinkEntity_.USER, JoinType.INNER);
+            Join<NetflixAccountEntity, NetflixAccountLinkEntity> accountJoinAccountLink = netflixAccountEntity.join(NetflixAccountEntity_.ACCOUNT_LINKS, JoinType.LEFT);
+            Join<NetflixAccountLinkEntity, CustomerEntity> accountLinkJoinCustomer = accountJoinAccountLink.join(NetflixAccountLinkEntity_.USER, JoinType.LEFT);
             return cb.in(accountLinkJoinCustomer.get(CustomerEntity_.CUSTOMER_STATUS)).value(customerStatus);
         };
     }

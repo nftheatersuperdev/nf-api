@@ -37,8 +37,8 @@ public class NetflixAdditionalAccountEntity {
     @OneToOne(mappedBy = "additionalAccount")
     private NetflixAdditionalAccountLinkEntity netflixAdditionalAccountLink;
 
-    @OneToOne(mappedBy = "additional")
-    private NetflixLinkAdditionalEntity netflixLinkAdditionals;
+    @OneToMany(mappedBy = "additional")
+    private List<NetflixLinkAdditionalEntity> netflixLinkAdditionals;
 
     @PrePersist
     public void prePersist() {

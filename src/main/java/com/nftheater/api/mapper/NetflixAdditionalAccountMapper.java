@@ -12,7 +12,6 @@ public interface NetflixAdditionalAccountMapper {
     @Mapping(target = "email", source = "additionalEmail")
     @Mapping(target = "password", source = "additionalPassword")
     @Mapping(target = "user", source = "netflixAdditionalAccountLink.user")
-    @Mapping(target = "netflixAccount", source = "netflixLinkAdditionals.account")
     NetflixAdditionalAccountDto toDto(NetflixAdditionalAccountEntity entity);
 
 }

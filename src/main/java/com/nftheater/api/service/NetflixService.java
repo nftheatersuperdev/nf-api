@@ -74,8 +74,6 @@ public class NetflixService {
                 Sort.by(NetflixAccountEntity_.CREATED_DATE).ascending()
         );
 
-        boolean isFindAdditionalAccount = false;
-
         // Find Netflix Account
         Specification<NetflixAccountEntity> specification = Specification.where(null);
         if (request != null) {
@@ -87,7 +85,7 @@ public class NetflixService {
             }
             if (!request.getUserId().isBlank() ) {
                 specification = specification.and(userIdContain(request.getUserId()));
-                isFindAdditionalAccount = true;
+                specification = specification.or(addUserIdContain(request.getUserId()));
             }
             if (!request.getAccountName().isBlank()) {
                 specification = specification.and(accountNameEqual(BusinessConstants.NETFLIX_PREFIX + "-" + request.getAccountName()));
@@ -104,25 +102,11 @@ public class NetflixService {
         Page<NetflixAccountEntity> netflixAccountEntityPage = netflixRepository.findAll(specification, pageable);
         Page<NetflixAccountDto> netflixAccountDtoPage = netflixAccountEntityPage.map(netflixAccountMapper::toDto);
         List<NetflixAccountDto> netflixAccountDtoList = netflixAccountDtoPage.getContent();
-        List<NetflixAccountDto> additionalNetflixAccountDtoList = new ArrayList<>();
-
-        if (isFindAdditionalAccount) {
-            // Find Netflix Additional Account
-            log.info("Find user in Netflix additional account");
-            Specification<NetflixAdditionalAccountEntity> additionalSpecification = Specification.where(null);
-            additionalSpecification = additionalSpecification.and(addUserIdContain(request.getUserId()));
-            Page<NetflixAdditionalAccountEntity> netflixAdditionalAccountEntityPage = netflixAdditionalAccountRepository.findAll(additionalSpecification, pageable);
-            Page<NetflixAdditionalAccountDto> netflixAdditionalAccountDtoPage = netflixAdditionalAccountEntityPage.map(netflixAdditionalAccountMapper::toDto);
-            List<NetflixAdditionalAccountDto> netflixAdditionalAccountDtoList = netflixAdditionalAccountDtoPage.getContent();
-            log.info("Found user in Netflix additional account : {}", netflixAdditionalAccountDtoList.size());
-            netflixAdditionalAccountDtoList.stream().forEach(add -> additionalNetflixAccountDtoList.add(add.getNetflixAccount()));
-        }
 
         PaginationResponse pagination = PaginationUtils.createPagination(netflixAccountDtoPage);
         SearchNetflixAccountResponse response = new SearchNetflixAccountResponse();
         response.setPagination(pagination);
         List<NetflixAccountResponse> netflixAccountResponse = netflixAccountMapper.mapDtoToResponses(netflixAccountDtoList);
-        netflixAccountResponse.addAll(netflixAccountMapper.mapDtoToResponses(additionalNetflixAccountDtoList));
 
         netflixAccountResponse.stream().forEach(acct -> {
                 for (NetflixAdditionalAccountResponse add : acct.getAdditionalAccounts()) {
