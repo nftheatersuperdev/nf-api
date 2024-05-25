@@ -46,6 +46,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -195,17 +196,20 @@ public class CustomerService {
 
     public long extendDayForUser(CustomerEntity customerEntity, int extendDay, String adminUser) {
         ZonedDateTime newExpiredDateTime;
+        ZonedDateTime now = ZonedDateTime.now();
+        now = now.with(LocalTime.of(1,0));
         if ("หมดอายุ".equalsIgnoreCase(customerEntity.getCustomerStatus())) {
             newExpiredDateTime = ZonedDateTime.now().plusDays(extendDay);
         } else {
             newExpiredDateTime = customerEntity.getExpiredDate().plusDays(extendDay);
         }
+        newExpiredDateTime = newExpiredDateTime.with(LocalTime.of(1,0));
         customerEntity.setExpiredDate(newExpiredDateTime);
         customerEntity.setCustomerStatus("กำลังใช้งาน");
         customerEntity.setUpdatedBy(adminUser);
         customerRepository.save(customerEntity);
 
-        return ChronoUnit.DAYS.between(ZonedDateTime.now(), newExpiredDateTime);
+        return ChronoUnit.DAYS.between(now, newExpiredDateTime);
     }
 
     public CustomerResponse updateCustomer(String userId, UpdateCustomerRequest updateCustomerRequest, UUID adminId) throws DataNotFoundException {
@@ -258,7 +262,7 @@ public class CustomerService {
             profileResponse.setNetflixEmail(netflix.getNetflixEmail());
             profileResponse.setNetflixPassword(netflix.getNetflixPassword());
             profileResponse.setNetflixPackageName(netflixAccountLinkEntity.getPackageName());
-            profileResponse.setNetflixDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
+            profileResponse.setNetflixDayLeft(calculateDayLeft(customerDto.getExpiredDate()));
         }
         NetflixAdditionalAccountLinkEntity additionalAccountLink = netflixAdditionalAccountLinkRepository.findByUserId(customerEntity.getId())
                 .orElse(null);
@@ -268,13 +272,13 @@ public class CustomerService {
             profileResponse.setNetflixEmail(additionalAccount.getAdditionalEmail());
             profileResponse.setNetflixPassword(additionalAccount.getAdditionalPassword());
             profileResponse.setNetflixPackageName(additionalAccountLink.getPackageName());
-            profileResponse.setNetflixDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
+            profileResponse.setNetflixDayLeft(calculateDayLeft(customerDto.getExpiredDate()));
         }
         YoutubeAccountLinkEntity youtubeAccountLinkEntity = youtubeAccountLinkRepository.findByUserId(customerEntity.getId())
                 .orElse(null);
         if (youtubeAccountLinkEntity != null) {
             profileResponse.setYoutubePackageName(youtubeAccountLinkEntity.getPackageName());
-            profileResponse.setYoutubeDayLeft(ChronoUnit.DAYS.between(ZonedDateTime.now(), customerDto.getExpiredDate()));
+            profileResponse.setYoutubeDayLeft(calculateDayLeft(customerDto.getExpiredDate()));
         }
 
         RequestOtpEntity requestOtp = requestOtpRepository.findByUserId(customerEntity.getUserId())

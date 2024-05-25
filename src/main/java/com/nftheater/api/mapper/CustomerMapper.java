@@ -9,6 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -45,7 +46,9 @@ public interface CustomerMapper extends EntityMapper<CustomerDto, CustomerEntity
     }
     @Named("calculateDayLeft")
     public static long calculateDayLeft(ZonedDateTime expireDate) {
-        long dayLeft = ChronoUnit.DAYS.between(ZonedDateTime.now(), expireDate);
+        ZonedDateTime now = ZonedDateTime.now();
+        now = now.with(LocalTime.of(1,0));
+        long dayLeft = ChronoUnit.DAYS.between(now, expireDate);
         return dayLeft > 0 ? dayLeft : 0;
     }
 
