@@ -62,7 +62,8 @@ public interface NetflixAccountMapper extends EntityMapper<NetflixAccountDto, Ne
 
     @Named("calculateDayLeft")
     public static long calculateDayLeft(ZonedDateTime expireDate) {
-        return ChronoUnit.DAYS.between(ZonedDateTime.now(), expireDate);
+        long dayLeft = ChronoUnit.DAYS.between(ZonedDateTime.now(), expireDate);
+        return dayLeft > 0 ? dayLeft : 0;
     }
 
     @Named("getCustomerStatus")
@@ -76,6 +77,8 @@ public interface NetflixAccountMapper extends EntityMapper<NetflixAccountDto, Ne
             return "รอ-ทวงซ้ำ 1";
         } else if (dayLeft == 1) {
             return "รอ-ทวงซ้ำ 2";
+        } else if (dayLeft == 0) {
+            return "หมดอายุ";
         } else {
             return "รอ-หมดอายุ";
         }

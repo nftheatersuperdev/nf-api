@@ -1,6 +1,7 @@
 package com.nftheater.api.service;
 
 import com.nftheater.api.config.BusinessConfiguration;
+import com.nftheater.api.constant.BusinessConstants;
 import com.nftheater.api.constant.SystemConfigName;
 import com.nftheater.api.controller.customer.request.CreateCustomerRequest;
 import com.nftheater.api.controller.customer.request.ExtendDayCustomerRequest;
@@ -52,6 +53,8 @@ import java.util.stream.Collectors;
 
 import static com.nftheater.api.constant.BusinessConstants.NETFLIX_PREFIX;
 import static com.nftheater.api.constant.BusinessConstants.YOUTUBE_PREFIX;
+import static com.nftheater.api.mapper.CustomerMapper.calculateDayLeft;
+import static com.nftheater.api.mapper.NetflixAccountMapper.getCustomerStatusFromDayLeft;
 import static com.nftheater.api.specification.CustomerSpecification.*;
 
 @Slf4j
@@ -110,6 +113,21 @@ public class CustomerService {
         Page<CustomerDto> customerDtoPage = customerEntityPage.map(customerMapper::toDto);
         List<CustomerDto> customerDtoList = customerDtoPage.getContent();
 
+        customerDtoList.stream().forEach(user -> {
+            long dayLeft = calculateDayLeft(user.getExpiredDate());
+            if(dayLeft <= 3) {
+                String userId = user.getUserId();
+                String status = getCustomerStatusFromDayLeft(user.getExpiredDate());
+                UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
+                updateCustomerRequest.setCustomerStatus(status);
+                try {
+                    updateCustomer(userId, updateCustomerRequest, BusinessConstants.DEFAULT_SYSTEM_UUID);
+                } catch (DataNotFoundException e) {
+                }
+                user.setCustomerStatus(status);
+            }
+        });
+
         PaginationResponse pagination = PaginationUtils.createPagination(customerDtoPage);
 
         List<CustomerResponse> customerResponse = customerMapper.mapDtoToResponses(customerDtoList);
@@ -144,7 +162,7 @@ public class CustomerService {
         List<CustomerDto> customerDtoList = customerEntities.stream().map(customerMapper::toDto).collect(Collectors.toList());
         List<CustomerListResponse> customerListResponses = new ArrayList<>();
         for(CustomerDto dto : customerDtoList) {
-            CustomerListResponse customerListResponse = new CustomerListResponse();
+            CustomerListResponse customerListResponse = getCustomerListResponse(dto);
             customerListResponse.setValue(dto.getUserId());
             customerListResponse.setLabel(dto.getLineId());
             customerListResponse.setFilterLabel(dto.getUserId() == null ? "" : dto.getUserId()
@@ -512,5 +530,17 @@ public class CustomerService {
         String customerToken = securityUtils.getTokenFromRequest(httpServletRequest);
         String username = jwtUtil.extractUsername(customerToken);
         return userInfoService.loadUserByUsername(username);
+    }
+
+    private static CustomerListResponse getCustomerListResponse(CustomerDto dto) {
+        CustomerListResponse customerListResponse = new CustomerListResponse();
+        customerListResponse.setValue(dto.getUserId());
+        customerListResponse.setLabel(dto.getLineId());
+        customerListResponse.setFilterLabel(dto.getUserId() == null ? "" : dto.getUserId()
+                .concat("|")
+                .concat(dto.getEmail() == null ? "" : dto.getEmail())
+                .concat("|")
+                .concat(dto.getLineId() == null ? "" : dto.getLineId()));
+        return customerListResponse;
     }
 }

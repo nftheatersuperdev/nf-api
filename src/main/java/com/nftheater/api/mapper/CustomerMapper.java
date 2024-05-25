@@ -45,7 +45,8 @@ public interface CustomerMapper extends EntityMapper<CustomerDto, CustomerEntity
     }
     @Named("calculateDayLeft")
     public static long calculateDayLeft(ZonedDateTime expireDate) {
-        return ChronoUnit.DAYS.between(ZonedDateTime.now(), expireDate);
+        long dayLeft = ChronoUnit.DAYS.between(ZonedDateTime.now(), expireDate);
+        return dayLeft > 0 ? dayLeft : 0;
     }
 
 }

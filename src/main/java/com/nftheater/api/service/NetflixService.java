@@ -222,7 +222,7 @@ public class NetflixService {
         // Set color and Update customer status
         netflixAccountResponse.getUsers().stream().forEach(user -> {
             user.setColor(getColor(user.getAccountStatus()));
-            if(user.getUser().getDayLeft() <= 3 && "กำลังใช้งาน".equalsIgnoreCase(user.getUser().getCustomerStatus())) {
+            if(user.getUser().getDayLeft() <= 3) {
                 String userId = user.getUser().getUserId();
                 String status = getCustomerStatusFromDayLeft(user.getUser().getExpiredDate());
                 UpdateCustomerRequest updateCustomerRequest = new UpdateCustomerRequest();
