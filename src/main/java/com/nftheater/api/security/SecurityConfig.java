@@ -61,7 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                      .requestMatchers("/v1/member/login")
                         .permitAll()
-                    .requestMatchers("/callback")
+                    .requestMatchers("/v1/payment/callback")
                         .permitAll()
                     .requestMatchers("/actuator/**")
                         .permitAll()
