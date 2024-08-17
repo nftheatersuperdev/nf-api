@@ -22,5 +22,13 @@ public class BusinessConfiguration {
     private String lineUrl;
     @Value("${line.bot.channel-token}")
     private String lineToken;
+    @Value("${paysolution.merchant.id}")
+    private String paySolutionMerchantId;
+    @Value("${paysolution.api.key}")
+    private String paySolutionApiKey;
+    @Value("${paysolution.secret.key}")
+    private String paySolutionSecretKey;
+    @Value("${paysolution.auth.key}")
+    private String paySolutionAuthKey;
 
 }
