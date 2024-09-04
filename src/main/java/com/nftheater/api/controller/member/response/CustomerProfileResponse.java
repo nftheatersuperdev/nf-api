@@ -3,6 +3,7 @@ package com.nftheater.api.controller.member.response;
 import lombok.Data;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 @Data
 public class CustomerProfileResponse {

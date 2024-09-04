@@ -2,6 +2,9 @@ package com.nftheater.api.service;
 
 import com.nftheater.api.entity.CustomerEntity;
 import com.nftheater.api.repository.CustomerRepository;
+import com.nftheater.api.security.SecurityUtils;
+import com.nftheater.api.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
