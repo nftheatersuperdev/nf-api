@@ -11,10 +11,7 @@ import com.nftheater.api.service.OrderPaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static com.nftheater.api.constant.ResponseStatus.SUCCESS;
 
@@ -25,8 +22,22 @@ public class PaymentController {
 
     private final OrderPaymentService orderPaymentService;
 
-    @PostMapping("/v1/payment/callback")
+    @PostMapping("/v1/payment/post/callback")
     public GeneralResponse<Void> callback(
+            @RequestParam(required = false) String refno,
+            @RequestParam(required = false) String orderno,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String statusname
+    ) throws DataNotFoundException {
+        log.info("===== Start PaySolution callback =====");
+        log.info("Callback with params refNo={}, orderNo={}, status={}, statusName={}", refno, orderno, status, statusname);
+        orderPaymentService.updatePayment(refno, orderno, status, statusname);
+        log.info("===== End PaySolution callback =====");
+        return new GeneralResponse<>(SUCCESS, null);
+    }
+
+    @GetMapping("/v1/payment/get/callback")
+    public GeneralResponse<Void> getCallback(
             @RequestParam(required = false) String refno,
             @RequestParam(required = false) String orderno,
             @RequestParam(required = false) String status,
