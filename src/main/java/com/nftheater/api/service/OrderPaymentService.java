@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -97,6 +98,17 @@ public class OrderPaymentService {
         orderEntity.setUpdatedDate(ZonedDateTime.now(DateUtil.getTimeZone()));
 
         orderRepository.save(orderEntity);
+
+        if ("CP".equals(status)) {
+            UUID packageId = UUID.fromString(orderEntity.getPackageId());
+            try {
+                PackageDto packageDto = packageService.getPackageDetailById(packageId);
+                CustomerEntity customerEntity = customerService.getCustomerByUserId(orderEntity.getUserId());
+                customerService.extendDayForUser(customerEntity, packageDto.getDay(), "API");
+            } catch (InvalidRequestException ex) {
+                log.error("Not found package");
+            }
+        }
     }
 
     private String generateExpireDate() {
