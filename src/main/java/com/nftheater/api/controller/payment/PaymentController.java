@@ -28,7 +28,7 @@ public class PaymentController {
             @RequestParam(required = false) String orderno,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String statusname
-    ) throws DataNotFoundException {
+    ) throws DataNotFoundException, InvalidRequestException {
         log.info("===== Start PaySolution callback =====");
         log.info("Callback with params refNo={}, orderNo={}, status={}, statusName={}", refno, orderno, status, statusname);
         orderPaymentService.updatePayment(refno, orderno, status, statusname);
@@ -42,7 +42,7 @@ public class PaymentController {
             @RequestParam(required = false) String orderno,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String statusname
-    ) throws DataNotFoundException {
+    ) throws DataNotFoundException, InvalidRequestException {
         log.info("===== Start PaySolution callback =====");
         log.info("Callback with params refNo={}, orderNo={}, status={}, statusName={}", refno, orderno, status, statusname);
         orderPaymentService.updatePayment(refno, orderno, status, statusname);

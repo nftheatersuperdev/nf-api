@@ -21,6 +21,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -87,11 +88,17 @@ public class OrderPaymentService {
         }
     }
 
-    public void updatePayment(String refNo, String orderNo, String status, String statusName) throws DataNotFoundException {
+    @Transactional(rollbackFor = Exception.class)
+    public void updatePayment(String refNo, String orderNo, String status, String statusName) throws DataNotFoundException, InvalidRequestException {
         log.info("Update Payment for refNo : {}", refNo);
 
         OrderEntity orderEntity = orderRepository.findById(refNo)
                 .orElseThrow(() -> new DataNotFoundException("Not found order with refNo : " + refNo));
+
+        if ("COMPLETED".equalsIgnoreCase(orderEntity.getStatus())) {
+            log.info("Cannot update COMPLETED order");
+            throw new InvalidRequestException("Cannot update COMPLETED order for ref no : " + refNo);
+        }
 
         orderEntity.setOrderNo(orderNo);
         orderEntity.setStatus(statusName);
@@ -103,7 +110,7 @@ public class OrderPaymentService {
             UUID packageId = UUID.fromString(orderEntity.getPackageId());
             try {
                 PackageDto packageDto = packageService.getPackageDetailById(packageId);
-                CustomerEntity customerEntity = customerService.getCustomerByUserId(orderEntity.getUserId());
+                CustomerEntity customerEntity = customerService.getCustomerById(UUID.fromString(orderEntity.getUserId()));
                 customerService.extendDayForUser(customerEntity, packageDto.getDay(), "API");
             } catch (InvalidRequestException ex) {
                 log.error("Not found package");

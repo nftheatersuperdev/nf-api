@@ -194,6 +194,11 @@ public class CustomerService {
                 .orElseThrow(() ->new DataNotFoundException("ไม่พบลูกค้า " + userId));
     }
 
+    public CustomerEntity getCustomerById(UUID id) throws DataNotFoundException {
+        return customerRepository.findById(id)
+                .orElseThrow(() ->new DataNotFoundException("ไม่พบลูกค้า " + id));
+    }
+
     public long extendDayForUser(CustomerEntity customerEntity, int extendDay, String adminUser) {
         ZonedDateTime newExpiredDateTime;
         ZonedDateTime now = ZonedDateTime.now();
