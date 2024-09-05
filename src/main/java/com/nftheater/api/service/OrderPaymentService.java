@@ -53,7 +53,7 @@ public class OrderPaymentService {
         CreateSecureLinkRequest createSecureLinkRequest = new CreateSecureLinkRequest();
         createSecureLinkRequest.setMerchant(businessConfiguration.getPaySolutionMerchantName());
         createSecureLinkRequest.setReturnURL(businessConfiguration.getPaySolutionReturnUrl());
-        createSecureLinkRequest.setPostBackURL(businessConfiguration.getPaySolutionPostbackUrl());
+        createSecureLinkRequest.setPostBackURL("");
         createSecureLinkRequest.setPayValue(packageDto.getPrice());
         createSecureLinkRequest.setOrderDetail(generateProductDetail(createPaymentRequest.getPaymentType(), packageDto.getName()));
         createSecureLinkRequest.setExpireDate(generateExpireDate());
