@@ -89,12 +89,10 @@ public interface NetflixAccountMapper extends EntityMapper<NetflixAccountDto, Ne
 
     @Named("getTypeSort")
     public static int getSortByAccountType(String type) {
-        if (type.equalsIgnoreCase(NetflixAccountType.TV.name())) {
+        if (type.equalsIgnoreCase(NetflixAccountType.ADDITIONAL.name())) {
             return 1;
-        } else if (type.equalsIgnoreCase(NetflixAccountType.ADDITIONAL.name())) {
-            return 2;
         }
-        return 3;
+        return 2;
     }
 
 }

@@ -139,10 +139,10 @@ public class DashboardService {
                     .stream()
                     .filter(user -> user.getUser() != null && user.getUser().getCustomerStatus().equalsIgnoreCase("กำลังใช้งาน"))
                     .toList().size();
-            totalTV = totalTV + acct.getUsers().stream().filter(device -> device.getAccountType().equals(NetflixAccountType.TV)).toList().size();
+            totalTV = totalTV + acct.getUsers().stream().filter(device -> device.getAccountType().equals(NetflixAccountType.ADDITIONAL)).toList().size();
             availableTV = availableTV + acct.getUsers()
                     .stream()
-                    .filter(device -> device.getAccountType().equals(NetflixAccountType.TV) && device.getUser() == null)
+                    .filter(device -> device.getAccountType().equals(NetflixAccountType.ADDITIONAL) && device.getUser() == null)
                     .toList().size();
             totalOther = totalOther + acct.getUsers().stream().filter(device -> device.getAccountType().equals(NetflixAccountType.OTHER)).toList().size();
             availableOther = availableOther + acct.getUsers()

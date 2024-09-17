@@ -316,7 +316,9 @@ public class NetflixService {
             addedEntity.setPackageName(netflixPackage.getName());
 
             netflixAdditionalAccountLinkRepository.save(addedEntity);
-        } else if (NetflixAccountType.TV.name().equalsIgnoreCase(request.getAccountType())) {
+        }
+        /** Comment @17-Sep-2024 By Veerapat.pre
+        else if (NetflixAccountType.TV.name().equalsIgnoreCase(request.getAccountType())) {
             if (netflixAccountEntity.getAccountLinks().size() == 0) {
                 NetflixAccountLinkEntity savedAccountLinkEntity = new NetflixAccountLinkEntity();
                 NetflixAccountLinkEntityId id = new NetflixAccountLinkEntityId();
@@ -351,7 +353,9 @@ public class NetflixService {
                     netflixAccountLinkRepository.save(savedAccountLinkEntity);
                 }
             }
-        } else {
+        }
+         **/
+        else {
             // Check max other
             int existingUser = netflixAccountEntity.getAccountLinks().stream()
                     .filter(type -> "OTHER".equalsIgnoreCase(type.getAccountType()))
@@ -678,34 +682,22 @@ public class NetflixService {
             netflixAccount.getUsers().add(linkUserResponse);
         }
 
-        int countTvAccount = netflixAccount.getUsers().stream()
-                .filter(acct -> acct.getAccountType().equals(NetflixAccountType.TV)).collect(Collectors.toList()).size();
+
         int countAdditionalAccount = netflixAccount.getUsers().stream()
                 .filter(acct -> acct.getAccountType().equals(NetflixAccountType.ADDITIONAL)).collect(Collectors.toList()).size();
         int countOtherAccount = netflixAccount.getUsers().stream()
                 .filter(acct -> acct.getAccountType().equals(NetflixAccountType.OTHER)).collect(Collectors.toList()).size();
 
-        while (countTvAccount + countAdditionalAccount < maxTvUser) {
+        while (countAdditionalAccount < maxTvUser) {
             NetflixLinkUserResponse linkTvUser = new NetflixLinkUserResponse();
-            if (countTvAccount == 0) {
-                linkTvUser.setAccountType(NetflixAccountType.TV);
-                linkTvUser.setAccountStatus(getAccountStatus(null));
-                linkTvUser.setColor("#008000");
-                linkTvUser.setSort(1);
+            linkTvUser.setAccountType(NetflixAccountType.ADDITIONAL);
+            linkTvUser.setAccountStatus("ยังไม่เปิดจอเสริม");
+            linkTvUser.setColor("#000000");
+            linkTvUser.setSort(2);
 
-                linkTvUser.setUser(null);
-                netflixAccount.getUsers().add(linkTvUser);
-                countTvAccount++;
-            } else {
-                linkTvUser.setAccountType(NetflixAccountType.ADDITIONAL);
-                linkTvUser.setAccountStatus("ยังไม่เปิดจอเสริม");
-                linkTvUser.setColor("#000000");
-                linkTvUser.setSort(2);
-
-                linkTvUser.setUser(null);
-                netflixAccount.getUsers().add(linkTvUser);
-                countAdditionalAccount++;
-            }
+            linkTvUser.setUser(null);
+            netflixAccount.getUsers().add(linkTvUser);
+            countAdditionalAccount++;
         }
 
         while (countOtherAccount < maxOtherUser) {
@@ -726,9 +718,6 @@ public class NetflixService {
 
     private AvailableDeviceResponse generateAvailableDevice(List<NetflixLinkUserResponse> users) {
         AvailableDeviceResponse resp = new AvailableDeviceResponse();
-        resp.setTvAvailable(users.stream()
-                .filter(u -> u.getAccountType().equals(NetflixAccountType.TV) && u.getAccountStatus().equalsIgnoreCase("ว่าง"))
-                .toList().size());
         resp.setOtherAvailable(users.stream()
                 .filter(u -> u.getAccountType().equals(NetflixAccountType.OTHER) && u.getAccountStatus().equalsIgnoreCase("ว่าง"))
                 .toList().size());
